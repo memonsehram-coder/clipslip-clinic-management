@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}CliqSlip - Clinic Queue Management{% endblock %}</title>
+    <!-- App Global CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="mobile-app-body">
+
+    <!-- Mobile App Top Header / Action Bar with Logo -->
+    <header class="app-top-bar">
+        <div class="app-brand-group">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="CliqSlip Logo" class="app-logo">
+            <span class="app-title">CliqSlip</span>
+        </div>
+        <div class="app-actions">
+            <span class="app-version">v1.0</span>
+        </div>
+    </header>
+
+    <!-- App Main Screen Container -->
+    <main class="app-screen-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+</body>
+</html>

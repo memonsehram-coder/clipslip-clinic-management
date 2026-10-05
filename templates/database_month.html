@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}CliqSlip - Database Archives{% endblock %}
+
+{% block content %}
+<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
+    
+    <!-- Sidebar -->
+    <div style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; height: 100%;">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+            <h3 style="margin: 0; font-size: 16px; color: #0f172a;">CliqSlip</h3>
+        </div>
+
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">🗂️ Database Records</a>
+            <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
+        </div>
+
+        <div style="padding: 15px; border-top: 1px solid #f1f5f9;">
+            <a href="/logout" style="padding: 10px 15px; background: #fef2f2; color: #dc2626; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; display: block; text-align: center;">Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="margin-left: 250px; flex-grow: 1; padding: 30px;">
+        
+        <!-- Top Branding Header -->
+        <div style="background: #ffffff; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Clinic Logo" style="width: 50px; height: 50px; object-fit: contain;">
+                <div>
+                    <h2 style="margin: 0 0 5px 0; color: #0f172a; font-size: 22px;">{{ clinic_name }} Archive</h2>
+                    <p style="margin: 0; color: #64748b; font-size: 14px;">Secure Patient Record Management System — Select a month and year to browse archives.</p>
+                </div>
+            </div>
+
+            <!-- Year Selector Dropdown -->
+            <form method="GET" action="/database" style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569;">Select Year:</label>
+                <select name="year" onchange="this.form.submit()" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: bold; color: #2563eb; cursor: pointer;">
+                    {% for yr in available_years %}
+                        <option value="{{ yr }}" {% if yr == selected_year %}selected{% endif %}>{{ yr }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <h3 style="color: #1e293b; font-size: 18px; margin-bottom: 15px;">Months of Year {{ selected_year }}</h3>
+
+        <!-- All 12 Months Cards Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+            {% for m in months %}
+            <a href="/database/month/{{ m.month_year }}" style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: block; transition: 0.2s;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 26px;">📁</span>
+                    <span style="background: {% if m.count > 0 %}#eff6ff{% else %}#f1f5f9{% endif %}; color: {% if m.count > 0 %}#2563eb{% else %}#64748b{% endif %}; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                        {{ m.count }} Patients
+                    </span>
+                </div>
+                <h4 style="margin: 0 0 5px 0; color: #0f172a; font-size: 16px;">{{ m.name }} {{ selected_year }}</h4>
+                <span style="color: #64748b; font-size: 13px;">Click to view daily logs</span>
+            </a>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

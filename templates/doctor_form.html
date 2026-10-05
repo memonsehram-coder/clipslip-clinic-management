@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}CliqSlip - Doctor & Clinic Profile{% endblock %}
+
+{% block content %}
+<div class="split-login-container">
+    <div class="login-left-side" style="align-items: flex-start; padding-top: 40px;">
+        <div class="login-form-box" style="max-width: 480px;">
+            <div class="brand-title-area">
+                <h1 class="company-name">Clinic Setup</h1>
+                <p class="company-tagline">Fill in your professional details</p>
+            </div>
+
+            <form action="/doctor-form" method="POST">
+                <div class="input-group">
+                    <label for="doctor_name">Full Name (Dr.)</label>
+                    <input type="text" id="doctor_name" name="doctor_name" required placeholder="Dr. Ali Khan">
+                </div>
+                <div class="input-group">
+                    <label for="clinic_name">Clinic / Hospital Name</label>
+                    <input type="text" id="clinic_name" name="clinic_name" required placeholder="City Health Care Clinic">
+                </div>
+                <div class="input-group">
+                    <label for="fee">Consultation Fee (PKR)</label>
+                    <input type="number" id="fee" name="fee" required placeholder="1500">
+                </div>
+                <div class="input-group">
+                    <label for="specialization">Specialization</label>
+                    <input type="text" id="specialization" name="specialization" required placeholder="General Physician / Cardiologist">
+                </div>
+
+                <button type="submit" class="btn-login" style="margin-top: 15px;">Save & Open Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="login-right-side">
+        <div class="image-frame-card">
+            <img src="{{ url_for('static', filename='login_bg.png') }}" alt="Clinic Background" class="right-bg-img">
+        </div>
+    </div>
+</div>
+{% endblock %}

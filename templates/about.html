@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}CliqSlip - About the Vision & System{% endblock %}
+
+{% block content %}
+<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
+    
+    <!-- Sidebar -->
+    <div style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; height: 100%; box-shadow: 2px 0 5px rgba(0,0,0,0.02);">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+            <h3 style="margin: 0; font-size: 16px; color: #0f172a; font-weight: 700;">CliqSlip</h3>
+        </div>
+
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">🗂️ Database</a>
+            <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">ℹ️ About</a>
+            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="margin-left: 250px; flex-grow: 1; padding: 40px; max-width: 1000px;">
+        
+        <!-- Header Banner with Gradient -->
+        <div style="background: linear-gradient(135deg, #1e40af, #2563eb); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);">
+            <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 700;">About CliqSlip & Global Healthcare Vision</h2>
+            <p style="margin: 0; opacity: 0.9; font-size: 15px;">Redefining outpatient management and empowering clinics worldwide through smart automation.</p>
+        </div>
+
+        <div style="background: white; padding: 40px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); color: #334155; line-height: 1.8;">
+            
+            <!-- Creator Profile Card -->
+            <div style="background: linear-gradient(to right, #f8fafc, #eff6ff); border: 1px solid #cbd5e1; padding: 25px; border-radius: 12px; margin-bottom: 35px; display: flex; align-items: center; gap: 20px;">
+                <div style="font-size: 45px; background: white; padding: 12px 18px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">👨‍💻</div>
+                <div>
+                    <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 20px; font-weight: 700;">Designed & Developed by Sehram Khalid Memon</h3>
+                    <p style="margin: 0; color: #475569; font-size: 14.5px;">
+                        Student of <b>Health Informatics & Management Systems</b> at <b>LUMHS Jamshoro</b>. Passionate about engineering intelligent, space-saving digital architectures to optimize clinical workflows and enhance patient experiences worldwide.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Section 1 -->
+            <h3 style="color: #1e293b; margin-top: 0; font-size: 19px; font-weight: 600; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <span>🌍</span> 1. The Global Outpatient Challenge & Our Vision
+            </h3>
+            <p style="margin-bottom: 25px; color: #475569; font-size: 15px;">
+                Outpatient departments (OPDs) <b>worldwide</b> frequently suffer from structural inefficiencies: congested waiting areas, tedious paperwork bottlenecks, and chaotic queue management. <b>CliqSlip</b> was conceptualized to address these universal pain points by providing an ultra-streamlined, digital-first operational ecosystem that brings order and precision to modern medical practices.
+            </p>
+
+            <!-- Section 2 -->
+            <h3 style="color: #1e293b; font-size: 19px; font-weight: 600; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <span>⚡</span> 2. Maximizing Efficiency & Preserving Clinic Space
+            </h3>
+            <p style="color: #475569; font-size: 15px;">
+                Traditional setups rely on bulky desktop computers that occupy vital clinic real estate. CliqSlip transitions practices to a compact footprint utilizing a sleek hardware configuration paired with an efficient thermal printer. This architectural shift radically preserves physical space while saving invaluable time across all tiers of clinic operations:
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin: 20px 0 25px 0;">
+                <div style="background: #f8fafc; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #2563eb;">
+                    <b>For Physicians:</b> Eliminates administrative friction, allowing doctors to dedicate 100% of their focus toward patient care and clinical accuracy.
+                </div>
+                <div style="background: #f8fafc; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #2563eb;">
+                    <b>For Patients:</b> Eradicates physical waiting confusion, ensuring a transparent, organized, and stress-free consultation journey.
+                </div>
+                <div style="background: #f8fafc; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #2563eb;">
+                    <b>For Management:</b> Streamlines record archiving and day-to-day coordination, drastically minimizing staff workload and human error.
+                </div>
+            </div>
+
+            <!-- Section 3 -->
+            <h3 style="color: #1e293b; font-size: 19px; font-weight: 600; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <span>🔊</span> 3. Automated Queue Flow & Smart Display Integration
+            </h3>
+            <p style="color: #475569; font-size: 15px; margin-bottom: 15px;">
+                To maintain a peaceful and synchronized environment, CliqSlip integrates automated queue management features:
+            </p>
+            <ul style="padding-left: 20px; color: #475569; font-size: 15px; margin-bottom: 30px;">
+                <li style="margin-bottom: 10px;"><b>Automated LCD & Audio Broadcasts:</b> Real-time token updates are projected onto waiting room LCD monitors and announced dynamically via audio speakers.</li>
+                <li style="margin-bottom: 10px;"><b>Autonomous Patient Transition:</b> The moment a consultation concludes, the subsequent token number updates automatically. The next patient seamlessly steps inside without requiring manual staff calls, ensuring uninterrupted workflow momentum.</li>
+            </ul>
+
+            <!-- Footer Meta -->
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #64748b;">
+                <span><b>CliqSlip Version:</b> v1.0 Global Vision Edition</span>
+                <span><b>Creator:</b> Sehram Khalid Memon (LUMHS Jamshoro)</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

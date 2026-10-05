@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}CliqSlip - System Settings{% endblock %}
+
+{% block content %}
+<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
+    
+    <!-- Sidebar -->
+    <div style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; height: 100%; box-shadow: 2px 0 5px rgba(0,0,0,0.02);">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+            <h3 style="margin: 0; font-size: 16px; color: #0f172a; font-weight: 700;">CliqSlip</h3>
+        </div>
+
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">🗂 Database</a>
+            <a href="/settings" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">ℹ️ About</a>
+            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="margin-left: 250px; flex-grow: 1; padding: 40px; max-width: 900px;">
+        
+        <!-- Header Banner -->
+        <div style="background: linear-gradient(135deg, #1e40af, #2563eb); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);">
+            <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 700;">System Settings</h2>
+            <p style="margin: 0; opacity: 0.9; font-size: 15px;">Manage your doctor profile, clinic configuration, consultation fees, and specialization.</p>
+        </div>
+
+        <!-- Settings Form Card -->
+        <div style="background: white; padding: 40px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);">
+            <h3 style="margin-top: 0; color: #0f172a; font-size: 19px; font-weight: 600; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
+                Doctor & Clinic Setup Configuration
+            </h3>
+
+            <form action="/update-settings" method="POST">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #475569; margin-bottom: 8px;">Full Name (Dr.)</label>
+                    <input type="text" name="doctor_name" value="{{ doctor_name }}" required placeholder="e.g. Sehram Memon" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px; outline: none;">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #475569; margin-bottom: 8px;">Clinic / Hospital Name</label>
+                    <input type="text" name="clinic_name" value="{{ clinic_name }}" required placeholder="e.g. Hyderabad Clinic" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px; outline: none;">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #475569; margin-bottom: 8px;">Consultation Fee (PKR)</label>
+                    <input type="number" name="consultation_fee" value="{{ consultation_fee }}" required placeholder="e.g. 1000" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px; outline: none;">
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #475569; margin-bottom: 8px;">Specialization</label>
+                    <input type="text" name="specialization" value="{{ specialization }}" required placeholder="e.g. Eye Specialist" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px; outline: none;">
+                </div>
+
+                <button type="submit" style="background: #2563eb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s;">
+                    Save Changes 💾
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

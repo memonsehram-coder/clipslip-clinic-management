@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}CliqSlip - Dashboard & Token Generation{% endblock %}
+
+{% block content %}
+<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
+    
+    <!-- Sidebar -->
+    <div style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; height: 100%;">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+            <h3 style="margin: 0; font-size: 16px; color: #0f172a;">CliqSlip</h3>
+        </div>
+
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+            <a href="/dashboard" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🗂️ Database</a>
+            <a href="/bluetooth" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🔵 Bluetooth Connection</a>
+            <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
+            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="margin-left: 250px; flex-grow: 1; padding: 30px; max-width: 900px;">
+        
+        <!-- Top Bar -->
+        <div style="background: #ffffff; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="margin: 0 0 5px 0; color: #1e293b; font-size: 20px;">{{ clinic_name }}</h2>
+                <span style="color: #64748b; font-size: 13px;">Automated Token & Slip Management</span>
+            </div>
+            <div style="text-align: right;">
+                <span style="color: #64748b; font-size: 13px; display: block;">Doctor Profile</span>
+                <b style="color: #0f172a; font-size: 14px;">Dr. {{ doctor_name }}</b>
+            </div>
+        </div>
+
+        <!-- Quick Info Banner & Bluetooth Card Grid -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 25px;">
+            <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0; font-size: 18px;">Ready for Next Patient</h3>
+                    <p style="margin: 0; opacity: 0.9; font-size: 13px;">Date, Time & Token numbers are generated automatically.</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; text-align: center;">
+                    <span style="font-size: 11px; display: block; text-transform: uppercase;">Status</span>
+                    <span style="font-size: 15px; font-weight: bold;">Active 🟢</span>
+                </div>
+            </div>
+
+            <!-- Bluetooth Connection Quick Card -->
+            <a href="/bluetooth" style="text-decoration: none; background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="font-size: 24px; background: #eff6ff; padding: 10px; border-radius: 8px;">🔵</div>
+                <div>
+                    <h4 style="margin: 0 0 3px 0; font-size: 14px; color: #0f172a; font-weight: 600;">Bluetooth</h4>
+                    <span style="font-size: 12px; color: #2563eb; font-weight: 500;">Configure ➔</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Token Generation Form -->
+        <div style="background: white; padding: 25px; border-radius: 10px; border: 1px solid #e2e8f0;">
+            <h3 style="margin-top: 0; color: #0f172a; font-size: 18px; margin-bottom: 20px;">New Patient Slip & Vitals</h3>
+            
+            <form action="/generate-slip" method="POST">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Patient Name</label>
+                        <input type="text" name="patient_name" required placeholder="Muhammad Ali" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Age / Gender</label>
+                        <input type="text" name="patient_age" required placeholder="32 / Male" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Contact Number</label>
+                        <input type="text" name="patient_phone" required placeholder="0300-1234567" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Blood Pressure (BP)</label>
+                        <input type="text" name="blood_pressure" placeholder="120/80 mmHg" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Heart Rate (Pulse)</label>
+                        <input type="text" name="heart_rate" placeholder="72 bpm" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Sugar (BSR)</label>
+                        <input type="text" name="sugar" placeholder="110 mg/dL" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Symptoms / Remarks / Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Fever, Cough, Checkup..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: none;"></textarea>
+                </div>
+
+                <button type="submit" style="width: 100%; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    Generate Token & Print Slip 🖨️
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
