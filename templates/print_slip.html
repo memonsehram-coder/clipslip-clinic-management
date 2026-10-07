@@ -4,23 +4,48 @@
     <meta charset="UTF-8">
     <title>Print Slip</title>
     <style>
+        /* Universal Screen & Thermal Printer Styling */
         body {
             font-family: 'Courier New', monospace;
             width: 58mm;
-            margin: 0;
+            max-width: 58mm;
+            margin: 0 auto;
             padding: 5px;
             font-size: 12px;
+            background: #ffffff;
+            color: #000000;
+            box-sizing: border-box;
         }
+        
         .center {
             text-align: center;
         }
+        
         .line {
             border-bottom: 1px dashed #000;
             margin: 5px 0;
         }
+
+        p {
+            margin: 4px 0;
+            line-height: 1.2;
+        }
+
+        /* Force Print Dialog & All Devices (Laptop, PC, Mobile) to Treat as Thermal Slip */
+        @media print {
+            @page {
+                size: 58mm auto;
+                margin: 0;
+            }
+            body {
+                width: 58mm;
+                margin: 0;
+                padding: 2mm;
+            }
+        }
     </style>
 </head>
-<body onload="window.print()">
+<body>
     <div class="center">
         <h3>{{ clinic_name }}</h3>
         <p>ڈاکٹر: {{ doctor_name }}</p>
@@ -38,5 +63,14 @@
     <div class="center">
         <p>شکریہ! اللہ آپ کو صحت دے۔</p>
     </div>
+
+    <script>
+        // Automatic trigger across devices with a slight delay for connection stability
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
 </body>
 </html>

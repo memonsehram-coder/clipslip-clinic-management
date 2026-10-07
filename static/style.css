@@ -231,11 +231,16 @@ body.mobile-app-body {
 }
 
 /* Auto-System Media Query for Mobile & Tablets */
+/* Auto-System Media Query for Mobile & Tablets */
 @media (max-width: 850px) {
     .split-login-container {
         grid-template-columns: 1fr;
     }
     .login-right-side {
-        display: none;
+        display: block;
+        padding: 15px;
+    }
+    .image-frame-card {
+        max-width: 100%;
     }
 }
