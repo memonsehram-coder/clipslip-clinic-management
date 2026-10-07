@@ -11,7 +11,7 @@ import os
 app = Flask(__name__)
 app.secret_key = 'cliqslip_secure_clinic_secret_key'
 
-# Supabase Configuration (Vercel Environment Variables se uthane ke liye)
+# Supabase Configuration
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ihcghpiezdvnomfxvetu.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -65,7 +65,6 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        # Supabase se user data fetch karna
         response = supabase.table('users').select("*").eq('email', email).execute()
         users = response.data
         
@@ -88,7 +87,7 @@ def forgot_password():
             otp = random.randint(100000, 999999)
             session['signup_email'] = email
             session['email_otp'] = otp
-            session['is_forgot'] = True  # Forgot password flag set kiya hai
+            session['is_forgot'] = True
             pkt_zone = timezone(timedelta(hours=5))
             session['otp_time'] = datetime.now(pkt_zone).timestamp()
             send_email_otp(email, otp)
@@ -102,7 +101,6 @@ def signup():
     if request.method == 'POST':
         email = request.form.get('email')
         
-        # Pehle check karein ke email pehle se database mein hai ya nahi
         existing_user = supabase.table('users').select("*").eq('email', email).execute()
         if existing_user.data:
             return render_template('signup.html', error="This email is already registered! Please sign in instead.")
@@ -147,14 +145,11 @@ def set_password():
             return "Session expired! Please go back to signup or login and try again."
         
         try:
-            # Check karein ke user pehle se mojood hai ya nahi
             existing = supabase.table('users').select("*").eq('email', email).execute()
             
             if existing.data:
-                # Agar mojood hai toh password update kar do
                 supabase.table('users').update({'password': password}).eq('email', email).execute()
             else:
-                # Agar naya hai toh insert kar do
                 supabase.table('users').insert({'email': email, 'password': password}).execute()
         except Exception as e:
             return f"Database Error: {str(e)}"
@@ -162,7 +157,6 @@ def set_password():
         session['is_logged_in'] = True
         session['doctor_email'] = email
         
-        # Agar yeh Forgot Password tha, toh seedha dashboard par bhejen
         if session.get('is_forgot'):
             session.pop('is_forgot', None)
             if existing.data:
@@ -193,7 +187,6 @@ def doctor_form():
         session['specialization'] = specialization
         
         email = session.get('doctor_email')
-        # Supabase users table mein doctor name aur clinic name update karna
         supabase.table('users').update({
             'doctor_name': doctor_name,
             'clinic_name': clinic_name
@@ -261,16 +254,18 @@ def generate_slip():
     
     session['latest_slip'] = slip_data
     
-    # Supabase patients table mein record insert karna
-    supabase.table('patients').insert({
-        'doctor_email': doctor_email,
-        'patient_name': patient_name,
-        'phone': patient_phone,
-        'token': str(token_number),
-        'bp': blood_pressure,
-        'sugar': sugar,
-        'date': current_date
-    }).execute()
+    try:
+        supabase.table('patients').insert({
+            'doctor_email': doctor_email,
+            'patient_name': patient_name,
+            'phone': patient_phone,
+            'token': str(token_number),
+            'bp': blood_pressure,
+            'sugar': sugar,
+            'date': current_date
+        }).execute()
+    except Exception as e:
+        return f"Database Error in Patient Insert: {str(e)}"
     
     return redirect(url_for('print_slip'))
 
@@ -306,9 +301,8 @@ def database():
     doctor_email = session.get('doctor_email')
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
     
-    # Supabase se is doctor ke saare patients fetch karna
     res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).execute()
-    PATIENT_RECORDS = res.data
+    PATIENT_RECORDS = res.data or []
     
     pkt_zone = timezone(timedelta(hours=5))
     current_year = datetime.now(pkt_zone).year
@@ -363,7 +357,7 @@ def database_month_detail(month_year):
     doctor_email = session.get('doctor_email')
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
     res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).execute()
-    PATIENT_RECORDS = res.data
+    PATIENT_RECORDS = res.data or []
     
     try:
         parts = month_year.split()
@@ -379,7 +373,7 @@ def database_month_detail(month_year):
         dt = datetime(year, month_num, day)
         date_str = dt.strftime("%Y-%m-%d")
         display_date = dt.strftime("%d %b %Y")
-        day_records = [r for r in PATIENT_RECORDS if r['date'] == date_str]
+        day_records = [r for r in PATIENT_RECORDS if r.get('date') == date_str]
         
         dates_list.append({
             'date_str': date_str,
@@ -400,7 +394,7 @@ def database_date_detail(date_str):
     doctor_email = session.get('doctor_email')
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
     res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).eq('date', date_str).execute()
-    date_records = res.data
+    date_records = res.data or []
     total_patients = len(date_records)
     
     return render_template('database_patients.html', 
