@@ -8,24 +8,60 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="mobile-app-body">
+<body class="mobile-app-body" style="background-color: #f8fafc; font-family: sans-serif; margin: 0; padding: 0;">
 
-    <!-- Mobile App Top Header / Action Bar with Logo -->
-    <header class="app-top-bar">
-        <div class="app-brand-group">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="CliqSlip Logo" class="app-logo">
-            <span class="app-title">CliqSlip</span>
+    <!-- Global Sliding Sidebar -->
+    <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: 2px 0 5px rgba(0,0,0,0.02);">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+                <h3 style="margin: 0; font-size: 16px; color: #0f172a;">CliqSlip</h3>
+            </div>
+            <!-- Close button inside sidebar -->
+            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
         </div>
-        <div class="app-actions">
-            <span class="app-version">v1.0</span>
+
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🗂️ Database</a>
+            <a href="/bluetooth" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🔵 Bluetooth Connection</a>
+            <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
+            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Global Top Header with Hamburger Button -->
+    <header class="app-top-bar" style="display: flex; justify-content: space-between; align-items: center; height: 60px; padding: 0 20px; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000;">
+        <div class="app-brand-group" style="display: flex; align-items: center; gap: 12px;">
+            <!-- Hamburger Toggle Button -->
+            <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                ☰
+            </button>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="CliqSlip Logo" class="app-logo" style="width: 30px; height: 30px; object-fit: contain;">
+            <span class="app-title" style="font-size: 18px; font-weight: 700; color: #0f172a;">CliqSlip</span>
+        </div>
+        <div class="app-actions" style="display: flex; align-items: center; gap: 15px;">
+            <span class="app-version" style="font-size: 12px; background: #f1f5f9; color: #64748b; padding: 3px 8px; border-radius: 12px; font-weight: 600;">v1.0</span>
         </div>
     </header>
 
-    <!-- App Main Screen Container -->
+    <!-- App Main Screen Content -->
     <main class="app-screen-content">
         {% block content %}
         {% endblock %}
     </main>
 
+    <!-- Global Toggle Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            if (sidebar.style.transform === 'translateX(0px)') {
+                sidebar.style.transform = 'translateX(-100%)';
+            } else {
+                sidebar.style.transform = 'translateX(0px)';
+            }
+        }
+    </script>
 </body>
 </html>
