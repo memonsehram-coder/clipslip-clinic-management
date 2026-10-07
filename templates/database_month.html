@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}CliqSlip - Dashboard & Token Generation{% endblock %}
+{% block title %}CliqSlip - Patient Records Database{% endblock %}
 
 {% block content %}
 <div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
     
-    <!-- Sidebar -->
+    <!-- Sidebar (Default Closed) -->
     <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
         <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -16,8 +16,8 @@
         </div>
 
         <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
-            <a href="/dashboard" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">📊 Dashboard</a>
-            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🗂️ Database</a>
+            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">🗂️ Database Records</a>
             <a href="/bluetooth" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🔵 Bluetooth Connection</a>
             <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">⚙️ Settings</a>
             <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
@@ -25,108 +25,53 @@
         </div>
     </div>
 
-    <!-- Main Content Container -->
-    <div id="main-content-area" style="width: 100%; max-width: 900px; padding: 30px; box-sizing: border-box; margin: 0 auto;">
+    <!-- Main Content -->
+    <div style="width: 100%; max-width: 900px; padding: 30px; box-sizing: border-box; margin: 0 auto;">
         
-        <div style="background: #ffffff; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 12px;">
+        <!-- Header with Hamburger Button -->
+        <div style="background: #ffffff; padding: 20px 25px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 15px;">
                 <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     ☰
                 </button>
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain;">
                 <div>
-                    <h2 style="margin: 0 0 2px 0; color: #1e293b; font-size: 18px;">{{ clinic_name }}</h2>
-                    <span style="color: #64748b; font-size: 12px;">Automated Token & Slip Management</span>
+                    <h2 style="margin: 0 0 4px 0; color: #0f172a; font-size: 20px;">Patient Records Archive</h2>
+                    <span style="color: #64748b; font-size: 13px;">{{ clinic_name }}</span>
                 </div>
             </div>
-            <div style="text-align: right;">
-                <span style="color: #64748b; font-size: 12px; display: block;">Doctor Profile</span>
-                <b style="color: #0f172a; font-size: 13px;">Dr. {{ doctor_name }}</b>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
+        </div>
+
+        <!-- Year Selector Bar -->
+        <div style="background: white; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #1e293b; font-size: 16px;">Select Year</h3>
+            <div style="display: flex; gap: 8px;">
+                {% for y in available_years %}
+                <a href="/database?year={{ y }}" style="padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; background: {% if y == selected_year %}#2563eb{% else %}#f1f5f9{% endif %}; color: {% if y == selected_year %}#ffffff{% else %}#475569{% endif %}; border: 1px solid {% if y == selected_year %}#2563eb{% else %}#cbd5e1{% endif %};">
+                    {{ y }}
+                </a>
+                {% endfor %}
             </div>
         </div>
 
-        <div style="margin-bottom: 25px;">
-            <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 style="margin: 0 0 5px 0; font-size: 18px;">⚡ Live Consultation Hub - Ready for Next Patient</h3>
-                    <p style="margin: 0; opacity: 0.9; font-size: 13px;">Date, Time & Token numbers are generated automatically.</p>
+        <!-- Months Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px;">
+            {% for m in months %}
+            <a href="/database/month/{{ m.month_year }}" style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.03); display: block; transition: 0.2s;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 24px;">📁</span>
+                    <span style="background: {% if m.count > 0 %}#eff6ff{% else %}#f1f5f9{% endif %}; color: {% if m.count > 0 %}#2563eb{% else %}#64748b{% endif %}; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {{ m.count }} Patients
+                    </span>
                 </div>
-                <div style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; text-align: center;">
-                    <span style="font-size: 11px; display: block; text-transform: uppercase;">Status</span>
-                    <span style="font-size: 15px; font-weight: bold;">Active 🟢</span>
-                </div>
-            </div>
-        </div>
-
-        <div style="background: white; padding: 25px; border-radius: 10px; border: 1px solid #e2e8f0;">
-            <h3 style="margin-top: 0; color: #0f172a; font-size: 18px; margin-bottom: 20px;">New Patient Slip & Vitals</h3>
-            
-            <form action="/generate-slip" method="POST">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;" class="form-grid">
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Patient Name</label>
-                        <input type="text" name="patient_name" required placeholder="Muhammad Ali" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Contact Number</label>
-                        <input type="text" name="patient_phone" required placeholder="0300-1234567" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;" class="form-grid">
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Age (Years)</label>
-                        <input type="number" name="patient_age" required placeholder="32" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Gender</label>
-                        <select name="patient_gender" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: #fff; box-sizing: border-box;">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;" class="form-grid">
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Blood Pressure (BP)</label>
-                        <input type="text" id="bp-input" name="blood_pressure" placeholder="120/80" maxlength="7" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Heart Rate (Pulse)</label>
-                        <input type="text" name="heart_rate" placeholder="72 bpm" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Sugar (BSR)</label>
-                        <input type="text" name="sugar" placeholder="110 mg/dL" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Symptoms / Remarks / Notes</label>
-                    <textarea name="notes" rows="3" placeholder="Fever, Cough, Checkup..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: none; box-sizing: border-box;"></textarea>
-                </div>
-
-                <button type="submit" style="width: 100%; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer;">
-                    Generate Token & Print Slip 🖨️
-                </button>
-            </form>
+                <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 16px;">{{ m.name }} {{ selected_year }}</h4>
+                <span style="color: #64748b; font-size: 12px;">Click to view dates</span>
+            </a>
+            {% endfor %}
         </div>
 
     </div>
 </div>
-
-<style>
-    @media (max-width: 850px) {
-        .form-grid {
-            grid-template-columns: 1fr !important;
-        }
-    }
-</style>
 
 <script>
     function toggleSidebar() {
@@ -137,13 +82,5 @@
             sidebar.style.transform = 'translateX(0px)';
         }
     }
-
-    document.getElementById('bp-input').addEventListener('input', function (e) {
-        let val = e.target.value.replace(/\D/g, ''); 
-        if (val.length > 3) {
-            val = val.substring(0, 3) + '/' + val.substring(3, 6);
-        }
-        e.target.value = val;
-    });
 </script>
 {% endblock %}
