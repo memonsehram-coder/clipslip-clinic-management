@@ -5,7 +5,7 @@
 {% block content %}
 <div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
     
-    <!-- Sidebar (Default Closed) -->
+    <!-- Sidebar -->
     <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
         <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -36,7 +36,7 @@
                 </button>
                 <div>
                     <a href="javascript:history.back()" style="color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">← Back to Dates</a>
-                    <h2 style="margin: 5px 0 0 0; color: #0f172a; font-size: 20px;">Patient Logs for Date: {{ date_str }}</h2>
+                    <h2 style="margin: 5px 0 0 0; color: #0f172a; font-size: 20px;">Patient Logs for Date: {{ date_str }}[cite: 12]</h2>
                 </div>
             </div>
             <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
@@ -45,11 +45,11 @@
         <!-- Total Patients Counter Card -->
         <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
             <div>
-                <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; display: block;">Summary for {{ date_str }}</span>
-                <h3 style="margin: 5px 0 0 0; font-size: 22px;">Total Patients Visited: {{ total_patients }}</h3>
+                <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; display: block;">Summary for {{ date_str }}[cite: 12]</span>
+                <h3 style="margin: 5px 0 0 0; font-size: 22px;">Total Patients Visited: {{ total_patients }}[cite: 12]</h3>
             </div>
             <div style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: bold;">
-                {{ clinic_name }}
+                {{ clinic_name }}[cite: 12]
             </div>
         </div>
 
@@ -70,22 +70,22 @@
                     {% if records %}
                         {% for row in records %}
                         <tr style="border-bottom: 1px solid #f1f5f9; color: #1e293b;">
-                            <td style="padding: 14px 18px; font-weight: bold; color: #2563eb;">#{{ row.token_number }}</td>
-                            <td style="padding: 14px 18px; font-weight: 600;">{{ row.patient_name }}</td>
-                            <td style="padding: 14px 18px;">{{ row.patient_age }}</td>
-                            <td style="padding: 14px 18px;">{{ row.patient_phone }}</td>
+                            <td style="padding: 14px 18px; font-weight: bold; color: #2563eb;">#{{ row.token_number }}[cite: 12]</td>
+                            <td style="padding: 14px 18px; font-weight: 600;">{{ row.patient_name }}[cite: 12]</td>
+                            <td style="padding: 14px 18px;">{{ row.patient_age }}[cite: 12]</td>
+                            <td style="padding: 14px 18px;">{{ row.patient_phone }}[cite: 12]</td>
                             <td style="padding: 14px 18px; font-size: 13px; color: #475569;">
-                                BP: {{ row.blood_pressure or 'N/A' }} | BSR: {{ row.sugar or 'N/A' }}
+                                BP: {{ row.blood_pressure or 'N/A' }} | BSR: {{ row.sugar or 'N/A' }}[cite: 12]
                             </td>
                             <td style="padding: 14px 18px; font-size: 13px; color: #64748b;">
-                                {{ row.time }}
+                                {{ row.time }}[cite: 12]
                             </td>
                         </tr>
                         {% endfor %}
                     {% else %}
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
-                                No patient records available for this date.
+                                No patient records available for this date.[cite: 12]
                             </td>
                         </tr>
                     {% endif %}
