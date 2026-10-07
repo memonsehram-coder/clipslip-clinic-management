@@ -45,9 +45,11 @@
 <body>
     <div id="visual-slip">
         <div class="center">
-            <h2>TOKEN NO: {{ slip.token_number }}</h2>
+            <h2>*** TOKEN: {{ slip.token_number }} ***</h2>
             <h3>{{ clinic_name }}</h3>
-            <p>Doctor: {{ doctor_name }}</p>
+            <p><strong>{{ doctor_name }}</strong></p>
+            <p>{{ specialization }}</p>
+            <p>Phone: {{ clinic_phone }}</p>
         </div>
         <div class="line"></div>
         <p><strong>Patient:</strong> {{ slip.patient_name }}</p>
@@ -77,10 +79,12 @@
 
             var rawText = 
                 "   ========================\n" +
-                "    *** TOKEN NO: " + "{{ slip.token_number }}" + " ***\n" +
+                "    *** TOKEN: " + "{{ slip.token_number }}" + " ***\n" +
                 "   ========================\n" +
-                "        " + "{{ clinic_name }}" + "\n" +
-                "      Doctor: " + "{{ doctor_name }}" + "\n" +
+                "      " + "{{ clinic_name }}" + "\n" +
+                "    " + "{{ doctor_name }}" + "\n" +
+                "    " + "{{ specialization }}" + "\n" +
+                "    Phone: " + "{{ clinic_phone }}" + "\n" +
                 "--------------------------------\n" +
                 "Patient: {{ slip.patient_name }}\n" +
                 "Age: {{ slip.patient_age }} Years\n" +
