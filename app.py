@@ -138,7 +138,7 @@ def set_password():
         email = session.get('signup_email')
         
         # Supabase mein naya user save karna
-        supabase.table('users').upsert({'email': email, 'password': password}).execute()
+        supabase.table('users').upsert({'email': email, 'password': password}, on_conflict='email').execute()
         
         session['is_logged_in'] = True
         session['doctor_email'] = email
