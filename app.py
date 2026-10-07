@@ -136,9 +136,21 @@ def set_password():
             return "Passwords do not match! Please try again."
         
         email = session.get('signup_email')
+        if not email:
+            return "Session expired! Please go back to signup or login and try again."
         
-        # Supabase mein naya user save karna
-        supabase.table('users').upsert({'email': email, 'password': password}, on_conflict='email').execute()
+        try:
+            # Check karein ke user pehle se mojood hai ya nahi
+            existing = supabase.table('users').select("*").eq('email', email).execute()
+            
+            if existing.data:
+                # Agar mojood hai toh password update kar do
+                supabase.table('users').update({'password': password}).eq('email', email).execute()
+            else:
+                # Agar naya hai toh insert kar do
+                supabase.table('users').insert({'email': email, 'password': password}).execute()
+        except Exception as e:
+            return f"Database Error: {str(e)}"
         
         session['is_logged_in'] = True
         session['doctor_email'] = email
