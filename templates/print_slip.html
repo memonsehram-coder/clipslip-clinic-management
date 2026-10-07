@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ur">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Print Slip</title>
@@ -25,8 +25,6 @@
         p {
             margin: 4px 0;
             line-height: 1.2;
-            white-space: pre-wrap;
-            word-break: break-all;
         }
         .print-btn {
             display: block;
@@ -45,7 +43,8 @@
     </style>
 </head>
 <body>
-    <div id="slip-content">
+    <!-- Yeh div screen par slip dikhane ke liye hai -->
+    <div id="visual-slip">
         <div class="center">
             <h3>{{ clinic_name }}</h3>
             <p>Doctor: {{ doctor_name }}</p>
@@ -70,8 +69,24 @@
 
     <script>
         function printViaRawBT() {
-            var slipHtml = document.getElementById('slip-content').innerHTML;
-            var url = "rawbt:base64," + btoa(unescape(encodeURIComponent(slipHtml)));
+            // Isme HTML tags nahi hain, sirf clean text hai taaki printer par tags print na hon
+            var rawText = 
+                "{{ clinic_name }}\n" +
+                "Doctor: {{ doctor_name }}\n" +
+                "Phone: {{ clinic_phone }}\n" +
+                "--------------------------------\n" +
+                "Token No: {{ slip.token_number }}\n" +
+                "Patient Name: {{ slip.patient_name }}\n" +
+                "Age: {{ slip.patient_age }} Years\n" +
+                "Phone: {{ slip.patient_phone }}\n" +
+                "Date: {{ slip.date }} - {{ slip.time }}\n" +
+                "--------------------------------\n" +
+                "Fee: {{ consultation_fee }} Rupees\n" +
+                "--------------------------------\n" +
+                "Thank you! Get well soon.\n\n\n";
+
+            // Base64 format mein clean text RawBT ko bhejna
+            var url = "rawbt:base64," + btoa(unescape(encodeURIComponent(rawText)));
             window.location.href = url;
         }
     </script>
