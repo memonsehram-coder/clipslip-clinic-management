@@ -65,20 +65,16 @@
 
     <!-- Direct RawBT Print Button -->
     <button class="print-btn" onclick="printViaRawBT()">Print via RawBT 🖨️</button>
-
-    <script>
+<script>
         function printViaRawBT() {
-            // Get the HTML text content of the slip
             var slipHtml = document.getElementById('slip-content').innerHTML;
             
-            // Format for RawBT intent scheme
-            var url = "rawbt:base64," + btoa(unescape(encodeURIComponent(slipHtml)));
+            // Base64 ki bajaye direct HTML intent format use karein taaki text bilkul theek print ho
+            var url = "rawbt://http://?" + encodeURIComponent(window.location.href);
             
-            // Open RawBT app to trigger direct print
-            window.location.href = url;
+            // Ya agar direct HTML pass karni hai toh ye format try karein:
+            window.location.href = "rawbt:data:text/html;charset=utf-8," + encodeURIComponent(slipHtml);
         }
-
-        // Optional: Auto trigger can be left or kept manual via button for reliability
     </script>
 </body>
 </html>
