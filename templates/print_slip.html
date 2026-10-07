@@ -76,16 +76,18 @@
             var pulse = "{{ slip.heart_rate if slip.heart_rate else '' }}";
 
             var rawText = 
-                "     *** TOKEN NO: " + "{{ slip.token_number }}" + " ***\n" +
-                "         " + "{{ clinic_name }}" + "\n" +
-                "       Doctor: " + "{{ doctor_name }}" + "\n" +
+                "   ========================\n" +
+                "    *** TOKEN NO: " + "{{ slip.token_number }}" + " ***\n" +
+                "   ========================\n" +
+                "        " + "{{ clinic_name }}" + "\n" +
+                "      Doctor: " + "{{ doctor_name }}" + "\n" +
                 "--------------------------------\n" +
                 "Patient: {{ slip.patient_name }}\n" +
                 "Age: {{ slip.patient_age }} Years\n" +
                 "Phone: {{ slip.patient_phone }}\n" +
                 "Date: {{ slip.date }} - {{ slip.time }}\n" +
                 "--------------------------------\n" +
-                "BP: " + (bp ? bp : "_____________") + "\n" +
+                "BP:    " + (bp ? bp : "_____________") + "\n" +
                 "Sugar: " + (sugar ? sugar : "_____________") + "\n" +
                 "Pulse: " + (pulse ? pulse : "_____________") + "\n" +
                 "--------------------------------\n" +
