@@ -62,6 +62,7 @@
         <p><strong>BP:</strong> {{ slip.blood_pressure if slip.blood_pressure else '_____________' }}</p>
         <p><strong>Sugar:</strong> {{ slip.sugar if slip.sugar else '_____________' }}</p>
         <p><strong>Pulse:</strong> {{ slip.heart_rate if slip.heart_rate else '_____________' }}</p>
+        <p><strong>Symptoms:</strong> {{ slip.notes if slip.notes else '_____________' }}</p>
         <div class="line"></div>
         <p><strong>Fee:</strong> {{ consultation_fee }} Rupees</p>
         <div class="line"></div>
@@ -78,6 +79,7 @@
             var bp = "{{ slip.blood_pressure if slip.blood_pressure else '' }}";
             var sugar = "{{ slip.sugar if slip.sugar else '' }}";
             var pulse = "{{ slip.heart_rate if slip.heart_rate else '' }}";
+            var notes = "{{ slip.notes if slip.notes else '' }}";
 
             var rawText = 
                 "================================\n" +
@@ -93,9 +95,10 @@
                 "Phone: {{ slip.patient_phone }}\n" +
                 "Date: {{ slip.date }} - {{ slip.time }}\n" +
                 "--------------------------------\n" +
-                "BP:    " + (bp ? bp : "_____________") + "\n" +
-                "Sugar: " + (sugar ? sugar : "_____________") + "\n" +
-                "Pulse: " + (pulse ? pulse : "_____________") + "\n" +
+                "BP:       " + (bp ? bp : "_____________") + "\n" +
+                "Sugar:    " + (sugar ? sugar : "_____________") + "\n" +
+                "Pulse:    " + (pulse ? pulse : "_____________") + "\n" +
+                "Symptoms: " + (notes ? notes : "_____________") + "\n" +
                 "--------------------------------\n" +
                 "Fee: {{ consultation_fee }} Rupees\n" +
                 "--------------------------------\n" +

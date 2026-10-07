@@ -235,6 +235,7 @@ def print_slip():
     clinic_phone = session.get('clinic_phone', '0300-0000000')
     clinic_address = session.get('clinic_address', 'Clinic Address')
     consultation_fee = session.get('consultation_fee', '500')
+    specialization = session.get('specialization', 'Specialist')
     
     return render_template('print_slip.html', 
                            slip=slip_data, 
@@ -242,7 +243,8 @@ def print_slip():
                            doctor_name=doctor_name, 
                            clinic_phone=clinic_phone, 
                            clinic_address=clinic_address, 
-                           consultation_fee=consultation_fee)
+                           consultation_fee=consultation_fee,
+                           specialization=specialization)
 
 # --- DATABASE HIERARCHY ROUTES ---
 
