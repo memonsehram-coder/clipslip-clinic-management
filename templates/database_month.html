@@ -5,19 +5,14 @@
 {% block content %}
 <div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
     
-    <!-- Sidebar (Default Closed) -->
+    <!-- Sidebar -->
     <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
-        
-        <!-- Sidebar Top Banner with login_bg.png -->
-        <div style="position: relative; width: 100%; height: 130px; background-image: url('{{ url_for(\'static\', filename=\'login_bg.png\') }}'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #e2e8f0;">
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); z-index: 1;"></div>
-            <div style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; background: white; padding: 2px; border-radius: 6px;">
-                    <h3 style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">CliqSlip</h3>
-                </div>
-                <button onclick="toggleSidebar()" style="background: rgba(255,255,255,0.2); border: none; font-size: 16px; cursor: pointer; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+                <h3 style="margin: 0; font-size: 16px; color: #0f172a;">CliqSlip</h3>
             </div>
+            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
         <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
