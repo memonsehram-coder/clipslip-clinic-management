@@ -45,9 +45,11 @@
 <body>
     <div id="visual-slip">
         <div class="center">
+            <div class="line"></div>
             <h2>*** TOKEN: {{ slip.token_number }} ***</h2>
-            <h3>{{ clinic_name }}</h3>
-            <p><strong>{{ doctor_name }}</strong></p>
+            <div class="line"></div>
+            <h3>{{ clinic_name }} Clinic</h3>
+            <p><strong>Dr. {{ doctor_name }}</strong></p>
             <p>{{ specialization }}</p>
             <p>Phone: {{ clinic_phone }}</p>
         </div>
@@ -78,13 +80,13 @@
             var pulse = "{{ slip.heart_rate if slip.heart_rate else '' }}";
 
             var rawText = 
-                "   ========================\n" +
-                "    *** TOKEN: " + "{{ slip.token_number }}" + " ***\n" +
-                "   ========================\n" +
-                "      " + "{{ clinic_name }}" + "\n" +
-                "    " + "{{ doctor_name }}" + "\n" +
-                "    " + "{{ specialization }}" + "\n" +
-                "    Phone: " + "{{ clinic_phone }}" + "\n" +
+                "================================\n" +
+                "     *** TOKEN: " + "{{ slip.token_number }}" + " ***\n" +
+                "================================\n" +
+                "      " + "{{ clinic_name }}" + " Clinic\n" +
+                "       Dr. " + "{{ doctor_name }}" + "\n" +
+                "       " + "{{ specialization }}" + "\n" +
+                "     Phone: " + "{{ clinic_phone }}" + "\n" +
                 "--------------------------------\n" +
                 "Patient: {{ slip.patient_name }}\n" +
                 "Age: {{ slip.patient_age }} Years\n" +
