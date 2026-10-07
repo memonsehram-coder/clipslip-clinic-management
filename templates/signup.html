@@ -11,6 +11,13 @@
                 <p class="company-tagline">Enter your email to receive verification OTP</p>
             </div>
 
+            <!-- Error Message Alert Box -->
+            {% if error %}
+            <div style="background-color: #ffeeee; color: #d9534f; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #f5c6cb; font-size: 13px; text-align: center; font-weight: 500;">
+                {{ error }}
+            </div>
+            {% endif %}
+
             <!-- Google Connect Button -->
             <div style="margin-bottom: 20px;">
                 <a href="#" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #333; text-decoration: none; font-weight: 500; font-size: 14px; box-sizing: border-box;">
