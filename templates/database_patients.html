@@ -3,35 +3,41 @@
 {% block title %}CliqSlip - Patients on {{ date_str }}{% endblock %}
 
 {% block content %}
-<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
+<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
     
-    <!-- Sidebar -->
-    <div style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; height: 100%;">
-        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
-            <h3 style="margin: 0; font-size: 16px; color: #0f172a;">CliqSlip</h3>
+    <!-- Sidebar (Default Closed) -->
+    <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+                <h3 style="margin: 0; font-size: 16px; color: #0f172a;">CliqSlip</h3>
+            </div>
+            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
         <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
             <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">📊 Dashboard</a>
             <a href="/database" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">🗂️ Database Records</a>
+            <a href="/bluetooth" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🔵 Bluetooth Connection</a>
             <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">⚙️ Settings</a>
             <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
-        </div>
-
-        <div style="padding: 15px; border-top: 1px solid #f1f5f9;">
-            <a href="/logout" style="padding: 10px 15px; background: #fef2f2; color: #dc2626; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; display: block; text-align: center;">Logout</a>
+            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div style="margin-left: 250px; flex-grow: 1; padding: 30px;">
+    <div style="width: 100%; max-width: 900px; padding: 30px; box-sizing: border-box; margin: 0 auto;">
         
-        <!-- Header with Back Link -->
+        <!-- Header with Hamburger Button -->
         <div style="background: #ffffff; padding: 20px 25px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <a href="javascript:history.back()" style="color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">← Back to Dates</a>
-                <h2 style="margin: 5px 0 0 0; color: #0f172a; font-size: 20px;">Patient Logs for Date: {{ date_str }}</h2>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    ☰
+                </button>
+                <div>
+                    <a href="javascript:history.back()" style="color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">← Back to Dates</a>
+                    <h2 style="margin: 5px 0 0 0; color: #0f172a; font-size: 20px;">Patient Logs for Date: {{ date_str }}</h2>
+                </div>
             </div>
             <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
         </div>
@@ -89,4 +95,15 @@
 
     </div>
 </div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('app-sidebar');
+        if (sidebar.style.transform === 'translateX(0px)') {
+            sidebar.style.transform = 'translateX(-100%)';
+        } else {
+            sidebar.style.transform = 'translateX(0px)';
+        }
+    }
+</script>
 {% endblock %}
