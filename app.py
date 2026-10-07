@@ -6,13 +6,14 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from supabase import create_client, Client
+import os
 
 app = Flask(__name__)
 app.secret_key = 'cliqslip_secure_clinic_secret_key'
 
-# Supabase Configuration
-SUPABASE_URL = "https://ihcghpiezdvnomfxvetu.supabase.co"
-SUPABASE_KEY = "sb_publishable_sLoXzxX_vLl9c_I-XmWpCQ_Dq2tvntg"
+# Supabase Configuration (Vercel Environment Variables se uthane ke liye)
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ihcghpiezdvnomfxvetu.supabase.co")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Session ko 1 saal tak permanent rakhne ke liye
