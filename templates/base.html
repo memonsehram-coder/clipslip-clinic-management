@@ -4,8 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CliqSlip - Clinic Management System{% endblock %}</title>
+    <!-- Custom CSS Stylesheet Link -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: sans-serif;">
+
+    <!-- Centralized Sidebar with login_bg.png Banner -->
+    <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
+        
+        <!-- Sidebar Top Banner with login_bg.png -->
+        <div style="position: relative; width: 100%; height: 130px; background-image: url('{{ url_for('static', filename='login_bg.png') }}'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #e2e8f0;">
+            <!-- Dark overlay for better text readability -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); z-index: 1;"></div>
+            
+            <!-- Content inside banner -->
+            <div style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; background: white; padding: 2px; border-radius: 6px;">
+                    <h3 style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">CliqSlip</h3>
+                </div>
+                <!-- Close button inside sidebar -->
+                <button onclick="toggleSidebar()" style="background: rgba(255,255,255,0.2); border: none; font-size: 16px; cursor: pointer; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+        </div>
+
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">🗂️ Database</a>
+            <a href="/bluetooth" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">🔵 Bluetooth Connection</a>
+            <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">ℹ️ About</a>
+            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
     {% block content %}{% endblock %}
+
+    <!-- Global Sidebar Toggle Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            if (sidebar.style.transform === 'translateX(0px)') {
+                sidebar.style.transform = 'translateX(-100%)';
+            } else {
+                sidebar.style.transform = 'translateX(0px)';
+            }
+        }
+    </script>
 </body>
 </html>
