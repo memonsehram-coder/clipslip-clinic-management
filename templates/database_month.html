@@ -1,23 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}CliqSlip - Database Archives{% endblock %}
+{% block title %}CliqSlip - Dashboard & Token Generation{% endblock %}
 
 {% block content %}
 <div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
     
     <!-- Sidebar (Default Closed) -->
     <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
-        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
-                <h3 style="margin: 0; font-size: 16px; color: #0f172a;">CliqSlip</h3>
+        
+        <!-- Sidebar Top Banner with login_bg.png -->
+        <div style="position: relative; width: 100%; height: 130px; background-image: url('{{ url_for(\'static\', filename=\'login_bg.png\') }}'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #e2e8f0;">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); z-index: 1;"></div>
+            <div style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; background: white; padding: 2px; border-radius: 6px;">
+                    <h3 style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">CliqSlip</h3>
+                </div>
+                <button onclick="toggleSidebar()" style="background: rgba(255,255,255,0.2); border: none; font-size: 16px; cursor: pointer; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
             </div>
-            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
         <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
-            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">📊 Dashboard</a>
-            <a href="/database" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">🗂️ Database Records</a>
+            <a href="/dashboard" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🗂️ Database</a>
             <a href="/bluetooth" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🔵 Bluetooth Connection</a>
             <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">⚙️ Settings</a>
             <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
@@ -25,53 +30,108 @@
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div style="width: 100%; max-width: 900px; padding: 30px; box-sizing: border-box; margin: 0 auto;">
+    <!-- Main Content Container -->
+    <div id="main-content-area" style="width: 100%; max-width: 900px; padding: 30px; box-sizing: border-box; margin: 0 auto;">
         
-        <!-- Top Branding Header with Hamburger Button -->
-        <div style="background: #ffffff; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="background: #ffffff; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
                 <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     ☰
                 </button>
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Clinic Logo" style="width: 40px; height: 40px; object-fit: contain;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain;">
                 <div>
-                    <h2 style="margin: 0 0 5px 0; color: #0f172a; font-size: 20px;">{{ clinic_name }} Archive</h2>
-                    <p style="margin: 0; color: #64748b; font-size: 13px;">Secure Patient Record Management System</p>
+                    <h2 style="margin: 0 0 2px 0; color: #1e293b; font-size: 18px;">{{ clinic_name }}</h2>
+                    <span style="color: #64748b; font-size: 12px;">Automated Token & Slip Management</span>
                 </div>
             </div>
-
-            <!-- Year Selector Dropdown -->
-            <form method="GET" action="/database" style="display: flex; align-items: center; gap: 10px;">
-                <label style="font-size: 13px; font-weight: 600; color: #475569;">Year:</label>
-                <select name="year" onchange="this.form.submit()" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: bold; color: #2563eb; cursor: pointer;">
-                    {% for yr in available_years %}
-                        <option value="{{ yr }}" {% if yr == selected_year %}selected{% endif %}>{{ yr }}</option>
-                    {% endfor %}
-                </select>
-            </form>
+            <div style="text-align: right;">
+                <span style="color: #64748b; font-size: 12px; display: block;">Doctor Profile</span>
+                <b style="color: #0f172a; font-size: 13px;">Dr. {{ doctor_name }}</b>
+            </div>
         </div>
 
-        <h3 style="color: #1e293b; font-size: 18px; margin-bottom: 15px;">Months of Year {{ selected_year }}</h3>
-
-        <!-- All 12 Months Cards Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
-            {% for m in months %}
-            <a href="/database/month/{{ m.month_year }}" style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: block; transition: 0.2s;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 26px;">📁</span>
-                    <span style="background: {% if m.count > 0 %}#eff6ff{% else %}#f1f5f9{% endif %}; color: {% if m.count > 0 %}#2563eb{% else %}#64748b{% endif %}; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
-                        {{ m.count }} Patients
-                    </span>
+        <div style="margin-bottom: 25px;">
+            <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0; font-size: 18px;">⚡ Live Consultation Hub - Ready for Next Patient</h3>
+                    <p style="margin: 0; opacity: 0.9; font-size: 13px;">Date, Time & Token numbers are generated automatically.</p>
                 </div>
-                <h4 style="margin: 0 0 5px 0; color: #0f172a; font-size: 16px;">{{ m.name }} {{ selected_year }}</h4>
-                <span style="color: #64748b; font-size: 13px;">Click to view daily logs</span>
-            </a>
-            {% endfor %}
+                <div style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; text-align: center;">
+                    <span style="font-size: 11px; display: block; text-transform: uppercase;">Status</span>
+                    <span style="font-size: 15px; font-weight: bold;">Active 🟢</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 25px; border-radius: 10px; border: 1px solid #e2e8f0;">
+            <h3 style="margin-top: 0; color: #0f172a; font-size: 18px; margin-bottom: 20px;">New Patient Slip & Vitals</h3>
+            
+            <form action="/generate-slip" method="POST">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;" class="form-grid">
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Patient Name</label>
+                        <input type="text" name="patient_name" required placeholder="Muhammad Ali" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Contact Number</label>
+                        <input type="text" name="patient_phone" required placeholder="0300-1234567" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;" class="form-grid">
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Age (Years)</label>
+                        <input type="number" name="patient_age" required placeholder="32" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Gender</label>
+                        <select name="patient_gender" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: #fff; box-sizing: border-box;">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;" class="form-grid">
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Blood Pressure (BP)</label>
+                        <input type="text" id="bp-input" name="blood_pressure" placeholder="120/80" maxlength="7" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Heart Rate (Pulse)</label>
+                        <input type="text" name="heart_rate" placeholder="72 bpm" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Sugar (BSR)</label>
+                        <input type="text" name="sugar" placeholder="110 mg/dL" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Symptoms / Remarks / Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Fever, Cough, Checkup..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: none; box-sizing: border-box;"></textarea>
+                </div>
+
+                <button type="submit" style="width: 100%; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    Generate Token & Print Slip 🖨️
+                </button>
+            </form>
         </div>
 
     </div>
 </div>
+
+<style>
+    @media (max-width: 850px) {
+        .form-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
 
 <script>
     function toggleSidebar() {
@@ -82,5 +142,13 @@
             sidebar.style.transform = 'translateX(0px)';
         }
     }
+
+    document.getElementById('bp-input').addEventListener('input', function (e) {
+        let val = e.target.value.replace(/\D/g, ''); 
+        if (val.length > 3) {
+            val = val.substring(0, 3) + '/' + val.substring(3, 6);
+        }
+        e.target.value = val;
+    });
 </script>
 {% endblock %}

@@ -7,12 +7,17 @@
     
     <!-- Sidebar (Default Closed) -->
     <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
-        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
-                <h3 style="margin: 0; font-size: 16px; color: #0f172a; font-weight: 700;">CliqSlip</h3>
+        
+        <!-- Sidebar Top Banner with login_bg.png -->
+        <div style="position: relative; width: 100%; height: 130px; background-image: url('{{ url_for(\'static\', filename=\'login_bg.png\') }}'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #e2e8f0;">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); z-index: 1;"></div>
+            <div style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; background: white; padding: 2px; border-radius: 6px;">
+                    <h3 style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">CliqSlip</h3>
+                </div>
+                <button onclick="toggleSidebar()" style="background: rgba(255,255,255,0.2); border: none; font-size: 16px; cursor: pointer; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
             </div>
-            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
         <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
@@ -28,7 +33,6 @@
     <!-- Main Content -->
     <div style="width: 100%; max-width: 900px; padding: 40px; box-sizing: border-box; margin: 0 auto;">
         
-        <!-- Top Bar with Hamburger Button -->
         <div style="background: #ffffff; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -42,20 +46,17 @@
             </div>
         </div>
 
-        <!-- Header Banner -->
         <div style="background: linear-gradient(135deg, #1e40af, #2563eb); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);">
             <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 700;">Bluetooth & Thermal Printer Connectivity</h2>
             <p style="margin: 0; opacity: 0.9; font-size: 15px;">Connect your wireless thermal printers and hardware devices for seamless slip printing.</p>
         </div>
 
-        <!-- Content Card -->
         <div style="background: white; padding: 40px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); text-align: center;">
             <div style="font-size: 60px; margin-bottom: 15px;">🖨️</div>
             <h3 style="color: #0f172a; font-size: 20px; font-weight: 700; margin-bottom: 10px;">Hardware Synchronization</h3>
             <p style="color: #64748b; font-size: 15px; max-width: 500px; margin: 0 auto 30px auto; line-height: 1.6;">
                 Pair your compact thermal printer via Bluetooth to instantly print consultation tokens and slips without relying on bulky desktop PC setups.
             </p>
-
             <button onclick="alert('Scanning for nearby Bluetooth thermal printers...')" style="background: #2563eb; color: white; border: none; padding: 14px 30px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); transition: 0.2s;">
                 Scan & Connect Printer 🔵
             </button>
