@@ -25,6 +25,8 @@
         p {
             margin: 4px 0;
             line-height: 1.2;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
         .print-btn {
             display: block;
@@ -46,32 +48,32 @@
     <div id="slip-content">
         <div class="center">
             <h3>{{ clinic_name }}</h3>
-            <p>ڈاکٹر: {{ doctor_name }}</p>
-            <p>فون: {{ clinic_phone }}</p>
+            <p>Doctor: {{ doctor_name }}</p>
+            <p>Phone: {{ clinic_phone }}</p>
         </div>
         <div class="line"></div>
-        <p><strong>ٹوکن نمبر:</strong> {{ slip.token_number }}</p>
-        <p><strong>مریض کا نام:</strong> {{ slip.patient_name }}</p>
-        <p><strong>عمر:</strong> {{ slip.patient_age }} سال</p>
-        <p><strong>فون:</strong> {{ slip.patient_phone }}</p>
-        <p><strong>تاریخ:</strong> {{ slip.date }} - {{ slip.time }}</p>
+        <p><strong>Token No:</strong> {{ slip.token_number }}</p>
+        <p><strong>Patient Name:</strong> {{ slip.patient_name }}</p>
+        <p><strong>Age:</strong> {{ slip.patient_age }} Years</p>
+        <p><strong>Phone:</strong> {{ slip.patient_phone }}</p>
+        <p><strong>Date:</strong> {{ slip.date }} - {{ slip.time }}</p>
         <div class="line"></div>
-        <p><strong>فیس:</strong> {{ consultation_fee }} روپیہ</p>
+        <p><strong>Fee:</strong> {{ consultation_fee }} Rupees</p>
         <div class="line"></div>
         <div class="center">
-            <p>شکریہ! اللہ آپ کو صحت دے۔</p>
+            <p>Thank you! Get well soon.</p>
         </div>
     </div>
 
     <!-- Direct RawBT Print Button -->
     <button class="print-btn" onclick="printViaRawBT()">Print via RawBT 🖨️</button>
 
-   <script>
-        window.onload = function() {
-            setTimeout(function() {
-                window.print();
-            }, 500);
-        };
+    <script>
+        function printViaRawBT() {
+            var slipHtml = document.getElementById('slip-content').innerHTML;
+            var url = "rawbt:base64," + btoa(unescape(encodeURIComponent(slipHtml)));
+            window.location.href = url;
+        }
     </script>
 </body>
 </html>
