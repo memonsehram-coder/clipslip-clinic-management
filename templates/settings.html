@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}CliqSlip - About the Vision & System{% endblock %}
+{% block title %}CliqSlip - Settings{% endblock %}
 
 {% block content %}
 <div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
     
-    <!-- Sidebar (Default Closed) -->
+    <!-- Sidebar -->
     <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
         <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -18,14 +18,14 @@
         <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
             <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">📊 Dashboard</a>
             <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">🗂️ Database</a>
-            <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">⚙️ Settings</a>
-            <a href="/about" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">ℹ️ About</a>
+            <a href="/settings" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
             <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div style="width: 100%; padding: 15px; box-sizing: border-box; margin: 0 auto;">
+    <div style="width: 100%; max-width: 800px; padding: 40px; box-sizing: border-box; margin: 0 auto;">
         
         <!-- Top Bar with Hamburger Button -->
         <div style="background: #ffffff; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
@@ -35,74 +35,37 @@
                 </button>
                 <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain;">
                 <div>
-                    <h2 style="margin: 0 0 2px 0; color: #1e293b; font-size: 18px;">About Section</h2>
-                    <span style="color: #64748b; font-size: 12px;">System Vision & Details</span>
+                    <h2 style="margin: 0 0 2px 0; color: #1e293b; font-size: 18px;">Settings</h2>
+                    <span style="color: #64748b; font-size: 12px;">Manage Clinic & System Preferences</span>
                 </div>
             </div>
         </div>
 
-        <!-- Header Banner with Gradient -->
-        <div style="background: linear-gradient(135deg, #1e40af, #2563eb); color: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);">
-            <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700;">About CliqSlip & Global Healthcare Vision</h2>
-            <p style="margin: 0; opacity: 0.9; font-size: 14px;">Redefining outpatient management and empowering clinics worldwide through smart automation[cite: 18].</p>
-        </div>
-
-        <div style="background: white; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); color: #334155; line-height: 1.8;">
+        <!-- Settings Card Box -->
+        <div style="background: white; padding: 35px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); color: #334155;">
             
-            <!-- Creator Profile Card -->
-            <div style="background: linear-gradient(to right, #f8fafc, #eff6ff); border: 1px solid #cbd5e1; padding: 20px; border-radius: 12px; margin-bottom: 30px; display: flex; flex-direction: column; text-align: center; gap: 15px;">
-                <div style="font-size: 40px; background: white; width: 60px; height: 60px; margin: 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">👨‍💻</div>
-                <div>
-                    <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 18px; font-weight: 700;">Designed & Developed by Sehram Khalid Memon[cite: 18]</h3>
-                    <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.6;">
-                        Student of <b>Health Informatics & Management Systems</b> at <b>LUMHS Jamshoro</b>[cite: 18]. Passionate about engineering intelligent, space-saving digital architectures to optimize clinical workflows and enhance patient experiences worldwide[cite: 18].
-                    </p>
-                </div>
-            </div>
-
-            <!-- Section 1 -->
-            <h3 style="color: #1e293b; margin-top: 0; font-size: 17px; font-weight: 600; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                <span>🌍</span> 1. The Global Outpatient Challenge & Our Vision
+            <h3 style="margin-top: 0; color: #1e293b; font-size: 20px; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 25px;">
+                ⚙️ Application & Clinic Settings
             </h3>
-            <p style="margin-bottom: 25px; color: #475569; font-size: 14.5px;">
-                Outpatient departments (OPDs) <b>worldwide</b> frequently suffer from structural inefficiencies: congested waiting areas, tedious paperwork bottlenecks, and chaotic queue management[cite: 18]. <b>CliqSlip</b> was conceptualized to address these universal pain points by providing an ultra-streamlined, digital-first operational ecosystem that brings order and precision to modern medical practices[cite: 18].
-            </p>
 
-            <!-- Section 2 -->
-            <h3 style="color: #1e293b; font-size: 17px; font-weight: 600; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                <span>⚡</span> 2. Maximizing Efficiency & Preserving Clinic Space
-            </h3>
-            <p style="color: #475569; font-size: 14.5px;">
-                Traditional setups rely on bulky desktop computers that occupy vital clinic real estate[cite: 18]. CliqSlip transitions practices to a compact footprint utilizing a sleek hardware configuration paired with an efficient thermal printer[cite: 18]. This architectural shift radically preserves physical space while saving invaluable time across all tiers of clinic operations[cite: 18]:
-            </p>
-            <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin: 20px 0 25px 0;">
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #2563eb; font-size: 14px;">
-                    <b>For Physicians:</b> Eliminates administrative friction, allowing doctors to dedicate 100% of their focus toward patient care and clinical accuracy[cite: 18].
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">Clinic Profile Management</h4>
+                    <p style="margin: 0 0 15px 0; color: #64748b; font-size: 14px;">Aap apne clinic ka naam, doctor ki tafseelaat aur consultation fee yahan se update kar sakte hain.</p>
+                    <a href="/doctor-form" style="display: inline-block; background: #2563eb; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">Edit Clinic Details</a>
                 </div>
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #2563eb; font-size: 14px;">
-                    <b>For Patients:</b> Eradicates physical waiting confusion, ensuring a transparent, organized, and stress-free consultation journey[cite: 18].
-                </div>
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #2563eb; font-size: 14px;">
-                    <b>For Management:</b> Streamlines record archiving and day-to-day coordination, drastically minimizing staff workload and human error[cite: 18].
-                </div>
-            </div>
 
-            <!-- Section 3 -->
-            <h3 style="color: #1e293b; font-size: 17px; font-weight: 600; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                <span>🔊</span> 3. Automated Queue Flow & Smart Display Integration
-            </h3>
-            <p style="color: #475569; font-size: 14.5px; margin-bottom: 15px;">
-                To maintain a peaceful and synchronized environment, CliqSlip integrates automated queue management features[cite: 18]:
-            </p>
-            <ul style="padding-left: 20px; color: #475569; font-size: 14.5px; margin-bottom: 30px;">
-                <li style="margin-bottom: 10px;"><b>Automated LCD & Audio Broadcasts:</b> Real-time token updates are projected onto waiting room LCD monitors and announced dynamically via audio speakers[cite: 18].</li>
-                <li style="margin-bottom: 10px;"><b>Autonomous Patient Transition:</b> The moment a consultation concludes, the subsequent token number updates automatically[cite: 18]. The next patient seamlessly steps inside without requiring manual staff calls, ensuring uninterrupted workflow momentum[cite: 18].</li>
-            </ul>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">Bluetooth & Thermal Printer</h4>
+                    <p style="margin: 0 0 15px 0; color: #64748b; font-size: 14px;">Thermal printer pairing aur Bluetooth settings configure karne ke liye niche click karein.</p>
+                    <a href="/bluetooth" style="display: inline-block; background: #0f172a; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">Configure Bluetooth</a>
+                </div>
 
-            <!-- Footer Meta -->
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: #64748b; text-align: center;">
-                <span><b>CliqSlip Version:</b> v1.0 Global Vision Edition[cite: 18]</span>
-                <span><b>Creator:</b> Sehram Khalid Memon (LUMHS Jamshoro)[cite: 18]</span>
+                <div style="background: #fef2f2; padding: 20px; border-radius: 10px; border: 1px solid #fecaca;">
+                    <h4 style="margin: 0 0 8px 0; color: #991b1b; font-size: 16px;">Session & Account</h4>
+                    <p style="margin: 0 0 15px 0; color: #7f1d1d; font-size: 14px;">Apne account se securely logout karne ke liye button dabayein.</p>
+                    <a href="/logout" style="display: inline-block; background: #dc2626; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">Log Out</a>
+                </div>
             </div>
 
         </div>
