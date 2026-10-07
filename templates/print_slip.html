@@ -76,9 +76,9 @@
             var pulse = "{{ slip.heart_rate if slip.heart_rate else '' }}";
 
             var rawText = 
-                "   *** TOKEN NO: " + "{{ slip.token_number }}" + " ***\n" +
-                "   " + "{{ clinic_name }}" + "\n" +
-                "Doctor: {{ doctor_name }}\n" +
+                "     *** TOKEN NO: " + "{{ slip.token_number }}" + " ***\n" +
+                "         " + "{{ clinic_name }}" + "\n" +
+                "       Doctor: " + "{{ doctor_name }}" + "\n" +
                 "--------------------------------\n" +
                 "Patient: {{ slip.patient_name }}\n" +
                 "Age: {{ slip.patient_age }} Years\n" +
@@ -91,7 +91,7 @@
                 "--------------------------------\n" +
                 "Fee: {{ consultation_fee }} Rupees\n" +
                 "--------------------------------\n" +
-                "Thank you! Get well soon.\n\n\n";
+                "     Thank you! Get well soon.\n\n\n";
 
             var url = "rawbt:base64," + btoa(unescape(encodeURIComponent(rawText)));
             window.location.href = url;

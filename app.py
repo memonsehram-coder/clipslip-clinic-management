@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 import calendar
 import random
 import smtplib
@@ -24,7 +24,6 @@ LAST_TOKEN_DATE = None
 
 # Email OTP bhejne ka function (Backend Sender Server)
 def send_email_otp(receiver_email, otp):
-    # Yahan apni woh Gmail ID aur uska Google App Password likhein jo email bhejegi
     sender_email = "clipslip.official@gmail.com"     
     sender_password = "lscurvemsqtgzsfn"     
     
@@ -80,7 +79,8 @@ def forgot_password():
             otp = random.randint(100000, 999999)
             session['signup_email'] = email
             session['email_otp'] = otp
-            session['otp_time'] = datetime.now().timestamp()
+            pkt_zone = timezone(timedelta(hours=5))
+            session['otp_time'] = datetime.now(pkt_zone).timestamp()
             send_email_otp(email, otp)
             return redirect(url_for('verify_otp'))
         else:
@@ -94,9 +94,9 @@ def signup():
         session['signup_email'] = email
         otp = random.randint(100000, 999999)
         session['email_otp'] = otp
-        session['otp_time'] = datetime.now().timestamp()
+        pkt_zone = timezone(timedelta(hours=5))
+        session['otp_time'] = datetime.now(pkt_zone).timestamp()
         
-        # User ki di gayi email par OTP bhejna
         send_email_otp(email, otp)
         
         return redirect(url_for('verify_otp'))
@@ -107,9 +107,9 @@ def verify_otp():
     if request.method == 'POST':
         user_entered_otp = request.form.get('otp')
         
-        # 2 minute (120 seconds) expiry check
         otp_time = session.get('otp_time', 0)
-        current_time = datetime.now().timestamp()
+        pkt_zone = timezone(timedelta(hours=5))
+        current_time = datetime.now(pkt_zone).timestamp()
         
         if current_time - otp_time > 120:
             return "OTP has expired (Time limit exceeded)! Please go back and resend a new code."
@@ -182,10 +182,13 @@ def generate_slip():
         return redirect(url_for('login'))
     global DAILY_TOKEN_COUNTER, LAST_TOKEN_DATE, PATIENT_RECORDS
     
-    now = datetime.now()
+    # Pakistan Standard Time (UTC + 5)
+    pkt_zone = timezone(timedelta(hours=5))
+    now = datetime.now(pkt_zone)
     current_date = now.strftime("%Y-%m-%d")
     current_time = now.strftime("%I:%M %p")
     
+    # Raat ke 12 baje date change hone par token counter dobara 1 se shuru hoga
     if LAST_TOKEN_DATE != current_date:
         DAILY_TOKEN_COUNTER = 1
         LAST_TOKEN_DATE = current_date
@@ -249,7 +252,8 @@ def database():
         return redirect(url_for('login'))
     
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
-    current_year = datetime.now().year
+    pkt_zone = timezone(timedelta(hours=5))
+    current_year = datetime.now(pkt_zone).year
     selected_year = request.args.get('year', str(current_year))
     try:
         selected_year = int(selected_year)
