@@ -43,19 +43,21 @@
     </style>
 </head>
 <body>
-    <!-- Yeh div screen par slip dikhane ke liye hai -->
     <div id="visual-slip">
         <div class="center">
+            <h2>TOKEN NO: {{ slip.token_number }}</h2>
             <h3>{{ clinic_name }}</h3>
             <p>Doctor: {{ doctor_name }}</p>
-            <p>Phone: {{ clinic_phone }}</p>
         </div>
         <div class="line"></div>
-        <p><strong>Token No:</strong> {{ slip.token_number }}</p>
-        <p><strong>Patient Name:</strong> {{ slip.patient_name }}</p>
+        <p><strong>Patient:</strong> {{ slip.patient_name }}</p>
         <p><strong>Age:</strong> {{ slip.patient_age }} Years</p>
         <p><strong>Phone:</strong> {{ slip.patient_phone }}</p>
         <p><strong>Date:</strong> {{ slip.date }} - {{ slip.time }}</p>
+        <div class="line"></div>
+        <p><strong>BP:</strong> {{ slip.blood_pressure if slip.blood_pressure else '_____________' }}</p>
+        <p><strong>Sugar:</strong> {{ slip.sugar if slip.sugar else '_____________' }}</p>
+        <p><strong>Pulse:</strong> {{ slip.heart_rate if slip.heart_rate else '_____________' }}</p>
         <div class="line"></div>
         <p><strong>Fee:</strong> {{ consultation_fee }} Rupees</p>
         <div class="line"></div>
@@ -69,23 +71,28 @@
 
     <script>
         function printViaRawBT() {
-            // Isme HTML tags nahi hain, sirf clean text hai taaki printer par tags print na hon
+            var bp = "{{ slip.blood_pressure if slip.blood_pressure else '' }}";
+            var sugar = "{{ slip.sugar if slip.sugar else '' }}";
+            var pulse = "{{ slip.heart_rate if slip.heart_rate else '' }}";
+
             var rawText = 
-                "{{ clinic_name }}\n" +
+                "   *** TOKEN NO: " + "{{ slip.token_number }}" + " ***\n" +
+                "   " + "{{ clinic_name }}" + "\n" +
                 "Doctor: {{ doctor_name }}\n" +
-                "Phone: {{ clinic_phone }}\n" +
                 "--------------------------------\n" +
-                "Token No: {{ slip.token_number }}\n" +
-                "Patient Name: {{ slip.patient_name }}\n" +
+                "Patient: {{ slip.patient_name }}\n" +
                 "Age: {{ slip.patient_age }} Years\n" +
                 "Phone: {{ slip.patient_phone }}\n" +
                 "Date: {{ slip.date }} - {{ slip.time }}\n" +
+                "--------------------------------\n" +
+                "BP: " + (bp ? bp : "_____________") + "\n" +
+                "Sugar: " + (sugar ? sugar : "_____________") + "\n" +
+                "Pulse: " + (pulse ? pulse : "_____________") + "\n" +
                 "--------------------------------\n" +
                 "Fee: {{ consultation_fee }} Rupees\n" +
                 "--------------------------------\n" +
                 "Thank you! Get well soon.\n\n\n";
 
-            // Base64 format mein clean text RawBT ko bhejna
             var url = "rawbt:base64," + btoa(unescape(encodeURIComponent(rawText)));
             window.location.href = url;
         }
