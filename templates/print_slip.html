@@ -65,16 +65,13 @@
 
     <!-- Direct RawBT Print Button -->
     <button class="print-btn" onclick="printViaRawBT()">Print via RawBT 🖨️</button>
-<script>
-        function printViaRawBT() {
-            var slipHtml = document.getElementById('slip-content').innerHTML;
-            
-            // Base64 ki bajaye direct HTML intent format use karein taaki text bilkul theek print ho
-            var url = "rawbt://http://?" + encodeURIComponent(window.location.href);
-            
-            // Ya agar direct HTML pass karni hai toh ye format try karein:
-            window.location.href = "rawbt:data:text/html;charset=utf-8," + encodeURIComponent(slipHtml);
-        }
+
+   <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
     </script>
 </body>
 </html>
