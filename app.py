@@ -5,9 +5,15 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from supabase import create_client, Client
 
 app = Flask(__name__)
 app.secret_key = 'cliqslip_secure_clinic_secret_key'
+
+# Supabase Configuration
+SUPABASE_URL = "https://ihcghpiezdvnomfxvetu.supabase.co"
+SUPABASE_KEY = "sb_publishable_sLoXzxX_vLl9c_I-XmWpCQ_Dq2tvntg"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Session ko 1 saal tak permanent rakhne ke liye
 app.permanent_session_lifetime = timedelta(days=365)
@@ -16,13 +22,10 @@ app.permanent_session_lifetime = timedelta(days=365)
 def make_session_permanent():
     session.permanent = True
 
-USER_DATABASE = {} 
-PATIENT_RECORDS = []
-
 DAILY_TOKEN_COUNTER = 0
 LAST_TOKEN_DATE = None
 
-# Email OTP bhejne ka function (Backend Sender Server)
+# Email OTP bhejne ka function
 def send_email_otp(receiver_email, otp):
     sender_email = "clipslip.official@gmail.com"     
     sender_password = "lscurvemsqtgzsfn"     
@@ -60,22 +63,27 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        if email in USER_DATABASE and USER_DATABASE[email]['password'] == password:
+        
+        # Supabase se user data fetch karna
+        response = supabase.table('users').select("*").eq('email', email).execute()
+        users = response.data
+        
+        if users and users[0]['password'] == password:
             session['is_logged_in'] = True
             session['doctor_email'] = email
-            session['doctor_name'] = USER_DATABASE[email].get('doctor_name', 'Doctor')
-            session['clinic_name'] = USER_DATABASE[email].get('clinic_name', 'CliqSlip Clinic')
+            session['doctor_name'] = users[0].get('doctor_name', 'Doctor')
+            session['clinic_name'] = users[0].get('clinic_name', 'CliqSlip Clinic')
             return redirect(url_for('dashboard'))
         else:
             return "Invalid Email or Password! Please try again."
     return render_template('login.html')
 
-# Forgot Password Route
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form.get('email')
-        if email in USER_DATABASE:
+        response = supabase.table('users').select("*").eq('email', email).execute()
+        if response.data:
             otp = random.randint(100000, 999999)
             session['signup_email'] = email
             session['email_otp'] = otp
@@ -98,7 +106,6 @@ def signup():
         session['otp_time'] = datetime.now(pkt_zone).timestamp()
         
         send_email_otp(email, otp)
-        
         return redirect(url_for('verify_otp'))
     return render_template('signup.html')
 
@@ -106,13 +113,12 @@ def signup():
 def verify_otp():
     if request.method == 'POST':
         user_entered_otp = request.form.get('otp')
-        
         otp_time = session.get('otp_time', 0)
         pkt_zone = timezone(timedelta(hours=5))
         current_time = datetime.now(pkt_zone).timestamp()
         
         if current_time - otp_time > 120:
-            return "OTP has expired (Time limit exceeded)! Please go back and resend a new code."
+            return "OTP has expired! Please go back and resend a new code."
         
         if int(user_entered_otp) == session.get('email_otp'):
             return redirect(url_for('set_password'))
@@ -127,8 +133,12 @@ def set_password():
         confirm_password = request.form.get('confirm_password')
         if password != confirm_password:
             return "Passwords do not match! Please try again."
+        
         email = session.get('signup_email')
-        USER_DATABASE[email] = {'password': password}
+        
+        # Supabase mein naya user save karna
+        supabase.table('users').upsert({'email': email, 'password': password}).execute()
+        
         session['is_logged_in'] = True
         session['doctor_email'] = email
         return redirect(url_for('doctor_form'))
@@ -154,9 +164,12 @@ def doctor_form():
         session['specialization'] = specialization
         
         email = session.get('doctor_email')
-        if email in USER_DATABASE:
-            USER_DATABASE[email]['doctor_name'] = doctor_name
-            USER_DATABASE[email]['clinic_name'] = clinic_name
+        # Supabase users table mein doctor name aur clinic name update karna
+        supabase.table('users').update({
+            'doctor_name': doctor_name,
+            'clinic_name': clinic_name
+        }).eq('email', email).execute()
+        
         return redirect(url_for('dashboard'))
     return render_template('doctor_form.html')
 
@@ -180,15 +193,13 @@ def bluetooth():
 def generate_slip():
     if not session.get('is_logged_in'):
         return redirect(url_for('login'))
-    global DAILY_TOKEN_COUNTER, LAST_TOKEN_DATE, PATIENT_RECORDS
+    global DAILY_TOKEN_COUNTER, LAST_TOKEN_DATE
     
-    # Pakistan Standard Time (UTC + 5)
     pkt_zone = timezone(timedelta(hours=5))
     now = datetime.now(pkt_zone)
     current_date = now.strftime("%Y-%m-%d")
     current_time = now.strftime("%I:%M %p")
     
-    # Raat ke 12 baje date change hone par token counter dobara 1 se shuru hoga
     if LAST_TOKEN_DATE != current_date:
         DAILY_TOKEN_COUNTER = 1
         LAST_TOKEN_DATE = current_date
@@ -196,6 +207,7 @@ def generate_slip():
         DAILY_TOKEN_COUNTER += 1
         
     token_number = DAILY_TOKEN_COUNTER
+    doctor_email = session.get('doctor_email')
     
     patient_name = request.form.get('patient_name')
     patient_age = request.form.get('patient_age')
@@ -219,7 +231,18 @@ def generate_slip():
     }
     
     session['latest_slip'] = slip_data
-    PATIENT_RECORDS.insert(0, slip_data)
+    
+    # Supabase patients table mein record insert karna
+    supabase.table('patients').insert({
+        'doctor_email': doctor_email,
+        'patient_name': patient_name,
+        'phone': patient_phone,
+        'token': str(token_number),
+        'bp': blood_pressure,
+        'sugar': sugar,
+        'date': current_date
+    }).execute()
+    
     return redirect(url_for('print_slip'))
 
 @app.route('/print-slip')
@@ -246,14 +269,18 @@ def print_slip():
                            consultation_fee=consultation_fee,
                            specialization=specialization)
 
-# --- DATABASE HIERARCHY ROUTES ---
-
 @app.route('/database')
 def database():
     if not session.get('is_logged_in'):
         return redirect(url_for('login'))
     
+    doctor_email = session.get('doctor_email')
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
+    
+    # Supabase se is doctor ke saare patients fetch karna
+    res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).execute()
+    PATIENT_RECORDS = res.data
+    
     pkt_zone = timezone(timedelta(hours=5))
     current_year = datetime.now(pkt_zone).year
     selected_year = request.args.get('year', str(current_year))
@@ -304,7 +331,11 @@ def database_month_detail(month_year):
     if not session.get('is_logged_in'):
         return redirect(url_for('login'))
         
+    doctor_email = session.get('doctor_email')
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
+    res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).execute()
+    PATIENT_RECORDS = res.data
+    
     try:
         parts = month_year.split()
         month_name = parts[0]
@@ -337,8 +368,10 @@ def database_date_detail(date_str):
     if not session.get('is_logged_in'):
         return redirect(url_for('login'))
         
+    doctor_email = session.get('doctor_email')
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
-    date_records = [r for r in PATIENT_RECORDS if r['date'] == date_str]
+    res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).eq('date', date_str).execute()
+    date_records = res.data
     total_patients = len(date_records)
     
     return render_template('database_patients.html', 
