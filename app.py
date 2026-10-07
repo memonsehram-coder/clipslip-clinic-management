@@ -88,6 +88,7 @@ def forgot_password():
             otp = random.randint(100000, 999999)
             session['signup_email'] = email
             session['email_otp'] = otp
+            session['is_forgot'] = True  # Forgot password flag set kiya hai
             pkt_zone = timezone(timedelta(hours=5))
             session['otp_time'] = datetime.now(pkt_zone).timestamp()
             send_email_otp(email, otp)
@@ -160,6 +161,15 @@ def set_password():
         
         session['is_logged_in'] = True
         session['doctor_email'] = email
+        
+        # Agar yeh Forgot Password tha, toh seedha dashboard par bhejen
+        if session.get('is_forgot'):
+            session.pop('is_forgot', None)
+            if existing.data:
+                session['doctor_name'] = existing.data[0].get('doctor_name', 'Doctor')
+                session['clinic_name'] = existing.data[0].get('clinic_name', 'CliqSlip Clinic')
+            return redirect(url_for('dashboard'))
+        
         return redirect(url_for('doctor_form'))
     return render_template('set_password.html')
 
