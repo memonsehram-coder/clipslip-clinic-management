@@ -100,6 +100,12 @@ def forgot_password():
 def signup():
     if request.method == 'POST':
         email = request.form.get('email')
+        
+        # Pehle check karein ke email pehle se database mein hai ya nahi
+        existing_user = supabase.table('users').select("*").eq('email', email).execute()
+        if existing_user.data:
+            return render_template('signup.html', error="This email is already registered! Please sign in instead.")
+        
         session['signup_email'] = email
         otp = random.randint(100000, 999999)
         session['email_otp'] = otp
