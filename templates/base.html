@@ -1,74 +1,11 @@
-{% extends "base.html" %}
-
-{% block title %}CliqSlip - Bluetooth & Printer Setup{% endblock %}
-
-{% block content %}
-<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
-    
-    <!-- Sidebar -->
-    <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
-        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
-                <h3 style="margin: 0; font-size: 16px; color: #0f172a; font-weight: 700;">CliqSlip</h3>
-            </div>
-            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
-        </div>
-
-        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
-            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">📊 Dashboard</a>
-            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">🗂️ Database</a>
-            <a href="/bluetooth" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">🔵 Bluetooth Connection</a>
-            <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">⚙️ Settings</a>
-            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">ℹ️ About</a>
-            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div style="width: 100%; max-width: 900px; padding: 40px; box-sizing: border-box; margin: 0 auto;">
-        
-        <div style="background: #ffffff; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    ☰
-                </button>
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain;">
-                <div>
-                    <h2 style="margin: 0 0 2px 0; color: #1e293b; font-size: 18px;">Bluetooth Setup</h2>
-                    <span style="color: #64748b; font-size: 12px;">Thermal Printer Connection</span>
-                </div>
-            </div>
-        </div>
-
-        <div style="background: linear-gradient(135deg, #1e40af, #2563eb); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);">
-            <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 700;">Bluetooth & Thermal Printer Connectivity</h2>
-            <p style="margin: 0; opacity: 0.9; font-size: 15px;">Connect your wireless thermal printers and hardware devices for seamless slip printing.</p>
-        </div>
-
-        <div style="background: white; padding: 40px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); text-align: center;">
-            <div style="font-size: 60px; margin-bottom: 15px;">🖨️</div>
-            <h3 style="color: #0f172a; font-size: 20px; font-weight: 700; margin-bottom: 10px;">Hardware Synchronization</h3>
-            <p style="color: #64748b; font-size: 15px; max-width: 500px; margin: 0 auto 30px auto; line-height: 1.6;">
-                Pair your compact thermal printer via Bluetooth to instantly print consultation tokens and slips without relying on bulky desktop PC setups.
-            </p>
-
-            <button onclick="alert('Scanning for nearby Bluetooth thermal printers...')" style="background: #2563eb; color: white; border: none; padding: 14px 30px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); transition: 0.2s;">
-                Scan & Connect Printer 🔵
-            </button>
-        </div>
-
-    </div>
-</div>
-
-<script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('app-sidebar');
-        if (sidebar.style.transform === 'translateX(0px)') {
-            sidebar.style.transform = 'translateX(-100%)';
-        } else {
-            sidebar.style.transform = 'translateX(0px)';
-        }
-    }
-</script>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CliqSlip - Clinic Management System{% endblock %}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: sans-serif;">
+    {% block content %}{% endblock %}
+</body>
+</html>
