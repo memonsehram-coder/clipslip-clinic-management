@@ -3,13 +3,16 @@
 {% block title %}CliqSlip - About the Vision & System{% endblock %}
 
 {% block content %}
-<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
+<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
     
-    <!-- Sidebar -->
-    <div style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; height: 100%; box-shadow: 2px 0 5px rgba(0,0,0,0.02);">
-        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
-            <h3 style="margin: 0; font-size: 16px; color: #0f172a; font-weight: 700;">CliqSlip</h3>
+    <!-- Sidebar (Default Closed) -->
+    <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+                <h3 style="margin: 0; font-size: 16px; color: #0f172a; font-weight: 700;">CliqSlip</h3>
+            </div>
+            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
         <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
@@ -22,12 +25,26 @@
     </div>
 
     <!-- Main Content -->
-    <div style="margin-left: 250px; flex-grow: 1; padding: 40px; max-width: 1000px;">
+    <div style="width: 100%; max-width: 1000px; padding: 40px; box-sizing: border-box; margin: 0 auto;">
         
+        <!-- Top Bar with Hamburger Button -->
+        <div style="background: #ffffff; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    ☰
+                </button>
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain;">
+                <div>
+                    <h2 style="margin: 0 0 2px 0; color: #1e293b; font-size: 18px;">About Section</h2>
+                    <span style="color: #64748b; font-size: 12px;">System Vision & Details</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Header Banner with Gradient -->
         <div style="background: linear-gradient(135deg, #1e40af, #2563eb); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);">
             <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 700;">About CliqSlip & Global Healthcare Vision</h2>
-            <p style="margin: 0; opacity: 0.9; font-size: 15px;">Redefining outpatient management and empowering clinics worldwide through smart automation.</p>
+            <p style="margin: 0; opacity: 0.9; font-size: 15px;">Redefining outpatient management and empowering clinics worldwide through smart automation[cite: 18].</p>
         </div>
 
         <div style="background: white; padding: 40px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); color: #334155; line-height: 1.8;">
@@ -36,9 +53,9 @@
             <div style="background: linear-gradient(to right, #f8fafc, #eff6ff); border: 1px solid #cbd5e1; padding: 25px; border-radius: 12px; margin-bottom: 35px; display: flex; align-items: center; gap: 20px;">
                 <div style="font-size: 45px; background: white; padding: 12px 18px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">👨‍💻</div>
                 <div>
-                    <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 20px; font-weight: 700;">Designed & Developed by Sehram Khalid Memon</h3>
+                    <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 20px; font-weight: 700;">Designed & Developed by Sehram Khalid Memon[cite: 18]</h3>
                     <p style="margin: 0; color: #475569; font-size: 14.5px;">
-                        Student of <b>Health Informatics & Management Systems</b> at <b>LUMHS Jamshoro</b>. Passionate about engineering intelligent, space-saving digital architectures to optimize clinical workflows and enhance patient experiences worldwide.
+                        Student of <b>Health Informatics & Management Systems</b> at <b>LUMHS Jamshoro</b>[cite: 18]. Passionate about engineering intelligent, space-saving digital architectures to optimize clinical workflows and enhance patient experiences worldwide[cite: 18].
                     </p>
                 </div>
             </div>
@@ -48,7 +65,7 @@
                 <span>🌍</span> 1. The Global Outpatient Challenge & Our Vision
             </h3>
             <p style="margin-bottom: 25px; color: #475569; font-size: 15px;">
-                Outpatient departments (OPDs) <b>worldwide</b> frequently suffer from structural inefficiencies: congested waiting areas, tedious paperwork bottlenecks, and chaotic queue management. <b>CliqSlip</b> was conceptualized to address these universal pain points by providing an ultra-streamlined, digital-first operational ecosystem that brings order and precision to modern medical practices.
+                Outpatient departments (OPDs) <b>worldwide</b> frequently suffer from structural inefficiencies: congested waiting areas, tedious paperwork bottlenecks, and chaotic queue management[cite: 18]. <b>CliqSlip</b> was conceptualized to address these universal pain points by providing an ultra-streamlined, digital-first operational ecosystem that brings order and precision to modern medical practices[cite: 18].
             </p>
 
             <!-- Section 2 -->
@@ -56,17 +73,17 @@
                 <span>⚡</span> 2. Maximizing Efficiency & Preserving Clinic Space
             </h3>
             <p style="color: #475569; font-size: 15px;">
-                Traditional setups rely on bulky desktop computers that occupy vital clinic real estate. CliqSlip transitions practices to a compact footprint utilizing a sleek hardware configuration paired with an efficient thermal printer. This architectural shift radically preserves physical space while saving invaluable time across all tiers of clinic operations:
+                Traditional setups rely on bulky desktop computers that occupy vital clinic real estate[cite: 18]. CliqSlip transitions practices to a compact footprint utilizing a sleek hardware configuration paired with an efficient thermal printer[cite: 18]. This architectural shift radically preserves physical space while saving invaluable time across all tiers of clinic operations[cite: 18]:
             </p>
             <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin: 20px 0 25px 0;">
                 <div style="background: #f8fafc; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #2563eb;">
-                    <b>For Physicians:</b> Eliminates administrative friction, allowing doctors to dedicate 100% of their focus toward patient care and clinical accuracy.
+                    <b>For Physicians:</b> Eliminates administrative friction, allowing doctors to dedicate 100% of their focus toward patient care and clinical accuracy[cite: 18].
                 </div>
                 <div style="background: #f8fafc; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #2563eb;">
-                    <b>For Patients:</b> Eradicates physical waiting confusion, ensuring a transparent, organized, and stress-free consultation journey.
+                    <b>For Patients:</b> Eradicates physical waiting confusion, ensuring a transparent, organized, and stress-free consultation journey[cite: 18].
                 </div>
                 <div style="background: #f8fafc; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #2563eb;">
-                    <b>For Management:</b> Streamlines record archiving and day-to-day coordination, drastically minimizing staff workload and human error.
+                    <b>For Management:</b> Streamlines record archiving and day-to-day coordination, drastically minimizing staff workload and human error[cite: 18].
                 </div>
             </div>
 
@@ -75,20 +92,31 @@
                 <span>🔊</span> 3. Automated Queue Flow & Smart Display Integration
             </h3>
             <p style="color: #475569; font-size: 15px; margin-bottom: 15px;">
-                To maintain a peaceful and synchronized environment, CliqSlip integrates automated queue management features:
+                To maintain a peaceful and synchronized environment, CliqSlip integrates automated queue management features[cite: 18]:
             </p>
             <ul style="padding-left: 20px; color: #475569; font-size: 15px; margin-bottom: 30px;">
-                <li style="margin-bottom: 10px;"><b>Automated LCD & Audio Broadcasts:</b> Real-time token updates are projected onto waiting room LCD monitors and announced dynamically via audio speakers.</li>
-                <li style="margin-bottom: 10px;"><b>Autonomous Patient Transition:</b> The moment a consultation concludes, the subsequent token number updates automatically. The next patient seamlessly steps inside without requiring manual staff calls, ensuring uninterrupted workflow momentum.</li>
+                <li style="margin-bottom: 10px;"><b>Automated LCD & Audio Broadcasts:</b> Real-time token updates are projected onto waiting room LCD monitors and announced dynamically via audio speakers[cite: 18].</li>
+                <li style="margin-bottom: 10px;"><b>Autonomous Patient Transition:</b> The moment a consultation concludes, the subsequent token number updates automatically[cite: 18]. The next patient seamlessly steps inside without requiring manual staff calls, ensuring uninterrupted workflow momentum[cite: 18].</li>
             </ul>
 
             <!-- Footer Meta -->
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #64748b;">
-                <span><b>CliqSlip Version:</b> v1.0 Global Vision Edition</span>
-                <span><b>Creator:</b> Sehram Khalid Memon (LUMHS Jamshoro)</span>
+                <span><b>CliqSlip Version:</b> v1.0 Global Vision Edition[cite: 18]</span>
+                <span><b>Creator:</b> Sehram Khalid Memon (LUMHS Jamshoro)[cite: 18]</span>
             </div>
 
         </div>
     </div>
 </div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('app-sidebar');
+        if (sidebar.style.transform === 'translateX(0px)') {
+            sidebar.style.transform = 'translateX(-100%)';
+        } else {
+            sidebar.style.transform = 'translateX(0px)';
+        }
+    }
+</script>
 {% endblock %}
