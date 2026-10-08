@@ -360,7 +360,6 @@ def database_month_detail(month_year):
     PATIENT_RECORDS = res.data or []
     
     try:
-        # URL decoding ke liye unquote use kar sakte hain ya direct split
         cleaned_month_year = month_year.replace('%20', ' ')
         parts = cleaned_month_year.split()
         month_name = parts[0]
@@ -376,7 +375,7 @@ def database_month_detail(month_year):
         dt = datetime(year, month_num, day)
         date_str = dt.strftime("%Y-%m-%d")
         display_date = dt.strftime("%d %b %Y")
-        day_records = [r for r in PATIENT_RECORDS if r.get('date') == date_str]
+        day_records = [r for r in PATIENT_RECORDS if r.get('date') == date_str or str(r.get('date', '')).startswith(date_str)]
         
         dates_list.append({
             'date_str': date_str,
@@ -388,10 +387,24 @@ def database_month_detail(month_year):
                            month_year=month_year, 
                            dates=dates_list, 
                            clinic_name=clinic_name)
+
+@app.route('/database/date/<date_str>')
+def database_date_detail(date_str):
+    if not session.get('is_logged_in'):
+        return redirect(url_for('login'))
+        
     doctor_email = session.get('doctor_email')
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
-    res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).eq('date', date_str).execute()
-    date_records = res.data or []
+    
+    res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).execute()
+    all_records = res.data or []
+    
+    date_records = []
+    for r in all_records:
+        r_date = str(r.get('date', ''))
+        if r_date == date_str or r_date.startswith(date_str):
+            date_records.append(r)
+            
     total_patients = len(date_records)
     
     return render_template('database_patients.html', 
