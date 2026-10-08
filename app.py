@@ -266,16 +266,18 @@ def print_slip():
         
     doctor_email = session.get('doctor_email')
     
-    # Jab print page khulega tabhi database mein record save hoga with correct column names
+    # Jab print page khulega tabhi database mein record save hoga
     if not session.get('slip_saved'):
         try:
             supabase.table('patients').insert({
                 'doctor_email': doctor_email,
                 'patient_name': slip_data['patient_name'],
-                'phone': slip_data['patient_phone'],
+                'patient_age': slip_data['patient_age'],
+                'patient_phone': slip_data['patient_phone'],
                 'token': str(slip_data['token_number']),
                 'bp': slip_data['blood_pressure'],
                 'sugar': slip_data['sugar'],
+                'time': slip_data['time'],
                 'date': slip_data['date']
             }).execute()
             session['slip_saved'] = True
