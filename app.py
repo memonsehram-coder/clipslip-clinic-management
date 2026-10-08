@@ -266,10 +266,9 @@ def print_slip():
         
     doctor_email = session.get('doctor_email')
     
-    # Jab print page khulega tabhi database mein record save hoga
     if not session.get('slip_saved'):
         try:
-            supabase.table('patients').insert({
+            res = supabase.table('patients').insert({
                 'doctor_email': doctor_email,
                 'patient_name': slip_data['patient_name'],
                 'patient_age': slip_data['patient_age'],
@@ -280,9 +279,13 @@ def print_slip():
                 'time': slip_data['time'],
                 'date': slip_data['date']
             }).execute()
+            
+            if hasattr(res, 'error') and res.error:
+                return f"Supabase Error: {res.error}"
+                
             session['slip_saved'] = True
         except Exception as e:
-            return f"Database Error in Patient Insert: {str(e)}"
+            return f"Detailed Database Error: {str(e)}"
     
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
     doctor_name = session.get('doctor_name', 'Doctor')
