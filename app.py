@@ -360,12 +360,15 @@ def database_month_detail(month_year):
     PATIENT_RECORDS = res.data or []
     
     try:
-        parts = month_year.split()
+        # URL decoding ke liye unquote use kar sakte hain ya direct split
+        cleaned_month_year = month_year.replace('%20', ' ')
+        parts = cleaned_month_year.split()
         month_name = parts[0]
         year = int(parts[1])
         month_num = list(calendar.month_name).index(month_name)
-    except:
-        return redirect(url_for('database'))
+    except Exception as e:
+        print(f"Error parsing month_year: {e}")
+        return f"Routing Error: {e} (Value received: {month_year})"
         
     num_days = calendar.monthrange(year, month_num)[1]
     dates_list = []
@@ -385,12 +388,6 @@ def database_month_detail(month_year):
                            month_year=month_year, 
                            dates=dates_list, 
                            clinic_name=clinic_name)
-
-@app.route('/database/date/<date_str>')
-def database_date_detail(date_str):
-    if not session.get('is_logged_in'):
-        return redirect(url_for('login'))
-        
     doctor_email = session.get('doctor_email')
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
     res = supabase.table('patients').select("*").eq('doctor_email', doctor_email).eq('date', date_str).execute()
