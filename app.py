@@ -229,7 +229,6 @@ def generate_slip():
         DAILY_TOKEN_COUNTER += 1
         
     token_number = DAILY_TOKEN_COUNTER
-    doctor_email = session.get('doctor_email')
     
     patient_name = request.form.get('patient_name')
     patient_age = request.form.get('patient_age')
@@ -253,19 +252,7 @@ def generate_slip():
     }
     
     session['latest_slip'] = slip_data
-    
-    try:
-        supabase.table('patients').insert({
-            'doctor_email': doctor_email,
-            'patient_name': patient_name,
-            'phone': patient_phone,
-            'token': str(token_number),
-            'bp': blood_pressure,
-            'sugar': sugar,
-            'date': current_date
-        }).execute()
-    except Exception as e:
-        return f"Database Error in Patient Insert: {str(e)}"
+    session['slip_saved'] = False  # Flag taaki print page par hi record save ho
     
     return redirect(url_for('print_slip'))
 
@@ -277,6 +264,26 @@ def print_slip():
     if not slip_data:
         return redirect(url_for('dashboard'))
         
+    doctor_email = session.get('doctor_email')
+    
+    # Jab print page khulega tabhi database mein record save hoga
+    if not session.get('slip_saved'):
+        try:
+            supabase.table('patients').insert({
+                'doctor_email': doctor_email,
+                'patient_name': slip_data['patient_name'],
+                'patient_age': slip_data['patient_age'],
+                'patient_phone': slip_data['patient_phone'],
+                'token_number': str(slip_data['token_number']),
+                'blood_pressure': slip_data['blood_pressure'],
+                'sugar': slip_data['sugar'],
+                'time': slip_data['time'],
+                'date': slip_data['date']
+            }).execute()
+            session['slip_saved'] = True
+        except Exception as e:
+            return f"Database Error in Patient Insert: {str(e)}"
+    
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
     doctor_name = session.get('doctor_name', 'Doctor')
     clinic_phone = session.get('clinic_phone', '0300-0000000')
