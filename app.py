@@ -268,24 +268,18 @@ def print_slip():
     
     if not session.get('slip_saved'):
         try:
-            res = supabase.table('patients').insert({
+            supabase.table('patients').insert({
                 'doctor_email': doctor_email,
                 'patient_name': slip_data['patient_name'],
-                'patient_age': slip_data['patient_age'],
-                'patient_phone': slip_data['patient_phone'],
+                'phone': slip_data['patient_phone'],
                 'token': str(slip_data['token_number']),
                 'bp': slip_data['blood_pressure'],
                 'sugar': slip_data['sugar'],
-                'time': slip_data['time'],
                 'date': slip_data['date']
             }).execute()
-            
-            if hasattr(res, 'error') and res.error:
-                return f"Supabase Error: {res.error}"
-                
             session['slip_saved'] = True
         except Exception as e:
-            return f"Detailed Database Error: {str(e)}"
+            return f"Database Error: {str(e)}"
     
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
     doctor_name = session.get('doctor_name', 'Doctor')
