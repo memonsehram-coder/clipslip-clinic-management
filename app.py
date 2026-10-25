@@ -323,7 +323,7 @@ def manual_next_token():
 
 
 # ------------------------------------------------------------------
-# Slip generate + print (Safe DB Insert & Daily Auto-Reset Token)
+# Slip generate + print (Safe DB Insert & Live Queue Sync)
 # ------------------------------------------------------------------
 @app.route('/generate-slip', methods=['POST'])
 def generate_slip():
@@ -335,7 +335,7 @@ def generate_slip():
     current_time = now.strftime("%I:%M %p")
     email = session.get('doctor_email')
 
-    # Rat ke 12 baje ke baad date badalne par token number automatically 1 se start hoga
+    # Token number calculate karna (Rat ke 12 baje ke baad yeh automatically 1 se start hoga)
     token_number = 1
     try:
         res = supabase.table('patients').select("token").eq('doctor_email', email).eq('date', current_date).execute()
@@ -359,29 +359,33 @@ def generate_slip():
         'saved': True
     }
 
-    # Safe Database Insert
+    # Safe Database Insert & Queue Status Update
     try:
         insert_data = {
             'doctor_email': email,
             'token': str(token_number),
             'date': current_date,
-            'time': current_time,
             'patient_name': slip_data.get('patient_name'),
             'phone': slip_data.get('patient_phone'),
             'bp': slip_data.get('blood_pressure'),
-            'sugar': slip_data.get('sugar')
+            'sugar': slip_data.get('sugar'),
+            'time': current_time,
+            'patient_age': slip_data.get('patient_age'),
+            'gender': slip_data.get('gender'),
+            'heart_rate': slip_data.get('heart_rate'),
+            'notes': slip_data.get('notes')
         }
-        
-        if slip_data.get('patient_age'):
-            insert_data['patient_age'] = slip_data.get('patient_age')
-        if slip_data.get('notes'):
-            insert_data['notes'] = slip_data.get('notes')
-        if slip_data.get('gender'):
-            insert_data['gender'] = slip_data.get('gender')
-        if slip_data.get('heart_rate'):
-            insert_data['heart_rate'] = slip_data.get('heart_rate')
 
+        # Patients table mein data insert karna
         supabase.table('patients').insert(insert_data).execute()
+
+        # Dashboard ke live token ko update karne ke liye queue_status mein upsert karna
+        supabase.table('queue_status').upsert({
+            'doctor_email': email,
+            'current_token': token_number,
+            'date': current_date
+        }).execute()
+
     except Exception as e:
         print(f"Patient save error: {e}")
         slip_data['saved'] = False
