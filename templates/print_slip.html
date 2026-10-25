@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <title>Print Slip</title>
     <style>
-        @page {
-            size: 58mm auto;
-            margin: 0;
-        }
         body {
             font-family: 'Courier New', monospace;
             width: 58mm;
@@ -45,15 +41,18 @@
             text-align: center;
             text-decoration: none;
         }
-        @media print {
-            .print-btn {
-                display: none;
-            }
-            body {
-                width: 58mm;
-                margin: 0;
-                padding: 2px;
-            }
+        .rawbt-btn {
+            background: #16a34a;
+        }
+        .warning-box {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 8px;
+            font-size: 11px;
+            text-align: center;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
@@ -86,8 +85,53 @@
         </div>
     </div>
 
-    <!-- Direct Print Button -->
-    <button class="print-btn" onclick="window.print()">Print Slip 🖨️</button>
+    <!-- Laptop / PC Print Button -->
+    <button class="print-btn" onclick="window.print()">Print via Laptop (PC) 🖨️</button>
 
+    <!-- Android RawBT Clean Text Print Button -->
+    <a href="" id="rawbtLink" class="print-btn rawbt-btn" style="display:none;">Print Slip via RawBT 📱</a>
+
+    <!-- iPhone Warning Message -->
+    <div id="iosWarning" class="warning-box">
+        ⚠️ Direct thermal printing via Bluetooth is not supported on iPhone (iOS). Please use an Android phone or Laptop/PC.
+    </div>
+
+    <script>
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+        const isAndroid = /android/i.test(userAgent);
+
+        if (isIOS) {
+            document.getElementById('iosWarning').style.display = 'block';
+            document.querySelector('.print-btn').style.display = 'none';
+            document.getElementById('rawbtLink').style.display = 'none';
+        } else if (isAndroid) {
+            document.querySelector('.print-btn').style.display = 'none'; // hide PC button
+            const rawbtLink = document.getElementById('rawbtLink');
+            rawbtLink.style.display = 'block';
+
+            // Clean text formatting for thermal printer
+            const slipText = `*** TOKEN: {{ slip.token_number }} ***\n` +
+                             `{{ clinic_name }} Clinic\n` +
+                             `Dr. {{ doctor_name }}\n` +
+                             `Phone: {{ clinic_phone }}\n` +
+                             `--------------------------------\n` +
+                             `Patient: {{ slip.patient_name }}\n` +
+                             `Age: {{ slip.patient_age }} Years\n` +
+                             `Phone: {{ slip.patient_phone }}\n` +
+                             `Date: {{ slip.date }} - {{ slip.time }}\n` +
+                             `--------------------------------\n` +
+                             `BP: {{ slip.blood_pressure if slip.blood_pressure else 'N/A' }}\n` +
+                             `Sugar: {{ slip.sugar if slip.sugar else 'N/A' }}\n` +
+                             `Pulse: {{ slip.heart_rate if slip.heart_rate else 'N/A' }}\n` +
+                             `Symptoms: {{ slip.notes if slip.notes else 'N/A' }}\n` +
+                             `--------------------------------\n` +
+                             `Fee: {{ consultation_fee }} Rupees\n` +
+                             `Thank you! Get well soon.\n\n\n`;
+
+            const base64EscPos = btoa(unescape(encodeURIComponent(slipText)));
+            rawbtLink.href = "rawbt:data:base64," + base64EscPos;
+        }
+    </script>
 </body>
 </html>
