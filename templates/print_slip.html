@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Print Slip</title>
     <style>
+        @page {
+            size: 58mm auto;
+            margin: 0;
+        }
         body {
             font-family: 'Courier New', monospace;
             width: 58mm;
@@ -46,9 +50,9 @@
                 display: none;
             }
             body {
-                width: 100%;
+                width: 58mm;
                 margin: 0;
-                padding: 0;
+                padding: 2px;
             }
         }
     </style>
@@ -82,7 +86,7 @@
         </div>
     </div>
 
-    <!-- Universal Print Button (Triggers Mobile/PC Print Dialog and Connected Bluetooth Thermal Printer) -->
+    <!-- Direct Print Button -->
     <button class="print-btn" onclick="window.print()">Print Slip 🖨️</button>
 
 </body>
