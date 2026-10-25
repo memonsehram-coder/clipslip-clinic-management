@@ -143,7 +143,7 @@
                              `Thank you! Get well soon.\n\n\n`;
 
             const base64EscPos = btoa(unescape(encodeURIComponent(slipText)));
-            rawbtLink.href = "intent://print?base64=" + base64EscPos + "#Intent;scheme=rawbt;package=ru.a402.rawbt;end;";
+            rawbtLink.href = "rawbt:data:base64," + base64EscPos;
         }
     </script>
 </body>
