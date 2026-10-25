@@ -323,7 +323,7 @@ def manual_next_token():
 
 
 # ------------------------------------------------------------------
-# Slip generate + print (Safe DB Insert)
+# Slip generate + print (Safe DB Insert & Daily Auto-Reset Token)
 # ------------------------------------------------------------------
 @app.route('/generate-slip', methods=['POST'])
 def generate_slip():
@@ -335,7 +335,7 @@ def generate_slip():
     current_time = now.strftime("%I:%M %p")
     email = session.get('doctor_email')
 
-    # Token number calculate karna
+    # Rat ke 12 baje ke baad date badalne par token number automatically 1 se start hoga
     token_number = 1
     try:
         res = supabase.table('patients').select("token").eq('doctor_email', email).eq('date', current_date).execute()
@@ -359,7 +359,7 @@ def generate_slip():
         'saved': True
     }
 
-    # Safe Database Insert (ताकि कॉलम मिसमैच पर एरर न आए)
+    # Safe Database Insert
     try:
         insert_data = {
             'doctor_email': email,
