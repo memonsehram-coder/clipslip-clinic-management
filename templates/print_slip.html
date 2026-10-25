@@ -75,11 +75,34 @@
         </div>
     </div>
 
-    <!-- Android RawBT Intent Link (Fixed to prevent empty job) -->
-    <a href="intent://print?base64={{ base64_data }}#Intent;scheme=rawbt;package=ru.a402.rawbt;end;" class="print-btn">Print via Thermal Printer 📱</a>
+    <!-- RawBT Direct App Trigger Link -->
+    <a href="" id="rawbtLink" class="print-btn">Print via RawBT 📱</a>
 
     <!-- Laptop / PC Print Button -->
     <button class="print-btn pc-btn" onclick="window.print()">Print via PC (Browser) 🖨️</button>
 
+    <script>
+        // Generate clean text for RawBT app automatically
+        const slipText = `*** TOKEN: {{ slip.token_number }} ***\n` +
+                         `{{ clinic_name }} Clinic\n` +
+                         `Dr. {{ doctor_name }}\n` +
+                         `Phone: {{ clinic_phone }}\n` +
+                         `--------------------------------\n` +
+                         `Patient: {{ slip.patient_name }}\n` +
+                         `Age: {{ slip.patient_age }} Years\n` +
+                         `Phone: {{ slip.patient_phone }}\n` +
+                         `Date: {{ slip.date }} - {{ slip.time }}\n` +
+                         `--------------------------------\n` +
+                         `BP: {{ slip.blood_pressure if slip.blood_pressure else 'N/A' }}\n` +
+                         `Sugar: {{ slip.sugar if slip.sugar else 'N/A' }}\n` +
+                         `Pulse: {{ slip.heart_rate if slip.heart_rate else 'N/A' }}\n` +
+                         `Symptoms: {{ slip.notes if slip.notes else 'N/A' }}\n` +
+                         `--------------------------------\n` +
+                         `Fee: {{ consultation_fee }} Rupees\n` +
+                         `Thank you! Get well soon.\n\n\n`;
+
+        const base64EscPos = btoa(unescape(encodeURIComponent(slipText)));
+        document.getElementById('rawbtLink').href = "rawbt:data:base64," + base64EscPos;
+    </script>
 </body>
 </html>

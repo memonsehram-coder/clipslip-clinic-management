@@ -7,7 +7,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from supabase import create_client, Client
 import os
-import base64
 
 app = Flask(__name__)
 app.secret_key = 'cliqslip_secure_clinic_secret_key'
@@ -290,29 +289,6 @@ def print_slip():
     consultation_fee = session.get('consultation_fee', '500')
     specialization = session.get('specialization', 'Specialist')
     
-    # Clean text slip layout for thermal printer
-    raw_text = (
-        f"*** TOKEN: {slip_data['token_number']} ***\n"
-        f"{clinic_name} Clinic\n"
-        f"Dr. {doctor_name}\n"
-        f"Phone: {clinic_phone}\n"
-        f"--------------------------------\n"
-        f"Patient: {slip_data['patient_name']}\n"
-        f"Age: {slip_data['patient_age']} Years\n"
-        f"Phone: {slip_data['patient_phone']}\n"
-        f"Date: {slip_data['date']} - {slip_data['time']}\n"
-        f"--------------------------------\n"
-        f"BP: {slip_data.get('blood_pressure') or 'N/A'}\n"
-        f"Sugar: {slip_data.get('sugar') or 'N/A'}\n"
-        f"Pulse: {slip_data.get('heart_rate') or 'N/A'}\n"
-        f"Symptoms: {slip_data.get('notes') or 'N/A'}\n"
-        f"--------------------------------\n"
-        f"Fee: {consultation_fee} Rupees\n"
-        f"Thank you! Get well soon.\n\n\n"
-    )
-    
-    base64_data = base64.b64encode(raw_text.encode('utf-8')).decode('utf-8')
-    
     return render_template('print_slip.html', 
                            slip=slip_data, 
                            clinic_name=clinic_name, 
@@ -320,8 +296,7 @@ def print_slip():
                            clinic_phone=clinic_phone, 
                            clinic_address=clinic_address, 
                            consultation_fee=consultation_fee,
-                           specialization=specialization,
-                           base64_data=base64_data)
+                           specialization=specialization)
 
 @app.route('/database')
 def database():
