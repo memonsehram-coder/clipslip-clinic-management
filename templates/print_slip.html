@@ -40,6 +40,16 @@
             cursor: pointer;
             text-align: center;
         }
+        @media print {
+            .print-btn {
+                display: none;
+            }
+            body {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -71,42 +81,7 @@
         </div>
     </div>
 
-    <!-- Direct RawBT Print Button -->
-    <button class="print-btn" onclick="printViaRawBT()">Print via RawBT 🖨️</button>
-
-    <script>
-        function printViaRawBT() {
-            var bp = "{{ slip.blood_pressure if slip.blood_pressure else '' }}";
-            var sugar = "{{ slip.sugar if slip.sugar else '' }}";
-            var pulse = "{{ slip.heart_rate if slip.heart_rate else '' }}";
-            var notes = "{{ slip.notes if slip.notes else '' }}";
-
-            var rawText = 
-                "================================\n" +
-                "     *** TOKEN: " + "{{ slip.token_number }}" + " ***\n" +
-                "================================\n" +
-                "      " + "{{ clinic_name }}" + " Clinic\n" +
-                "       Dr. " + "{{ doctor_name }}" + "\n" +
-                "       " + "{{ specialization }}" + "\n" +
-                "     Phone: " + "{{ clinic_phone }}" + "\n" +
-                "--------------------------------\n" +
-                "Patient: {{ slip.patient_name }}\n" +
-                "Age: {{ slip.patient_age }} Years\n" +
-                "Phone: {{ slip.patient_phone }}\n" +
-                "Date: {{ slip.date }} - {{ slip.time }}\n" +
-                "--------------------------------\n" +
-                "BP:       " + (bp ? bp : "_____________") + "\n" +
-                "Sugar:    " + (sugar ? sugar : "_____________") + "\n" +
-                "Pulse:    " + (pulse ? pulse : "_____________") + "\n" +
-                "Symptoms: " + (notes ? notes : "_____________") + "\n" +
-                "--------------------------------\n" +
-                "Fee: {{ consultation_fee }} Rupees\n" +
-                "--------------------------------\n" +
-                "     Thank you! Get well soon.\n\n\n";
-
-            var url = "rawbt:base64," + btoa(unescape(encodeURIComponent(rawText)));
-            window.location.href = url;
-        }
-    </script>
+    <!-- Universal Print Button -->
+    <button class="print-btn" onclick="window.print()">Print Slip 🖨️</button>
 </body>
 </html>

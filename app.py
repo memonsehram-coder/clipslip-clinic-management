@@ -13,7 +13,6 @@ app.secret_key = 'cliqslip_secure_clinic_secret_key'
 
 # Supabase Configuration
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ihcghpiezdvnomfxvetu.supabase.co")
-# Yahan apni asli Supabase Anon Key paste kar dein (quotes ke andar)
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "YAHAN_APNI_SUPABASE_ANON_KEY_PASTE_KAREIN")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -419,7 +418,6 @@ def database_date_detail(date_str):
                            total_patients=total_patients, 
                            clinic_name=clinic_name)
 
-# MAC Address Save karne ka route
 @app.route('/save-mac', methods=['POST'])
 def save_mac():
     if not session.get('is_logged_in'):
