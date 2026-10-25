@@ -49,6 +49,18 @@
             </h3>
 
             <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- ESP32 MAC Address Configuration (NEW ADDED) -->
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">ESP32 Hardware MAC Address</h4>
+                    <p style="margin: 0 0 15px 0; color: #64748b; font-size: 14px;">Apne main display (LCD/Speaker) wale ESP32 ka MAC address yahan enter karein taaki system connect ho sake.</p>
+                    
+                    <form action="/save-mac" method="POST" style="display: flex; gap: 10px;">
+                        <input type="text" name="esp_mac" value="{{ esp_mac or '' }}" placeholder="e.g. 24:6F:28:XX:XX:XX" required style="flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                        <button type="submit" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">Save MAC</button>
+                    </form>
+                </div>
+
                 <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
                     <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">Clinic Profile Management</h4>
                     <p style="margin: 0 0 15px 0; color: #64748b; font-size: 14px;">Aap apne clinic ka naam, doctor ki tafseelaat aur consultation fee yahan se update kar sakte hain.</p>

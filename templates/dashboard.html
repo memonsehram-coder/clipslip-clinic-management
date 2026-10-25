@@ -49,6 +49,20 @@
             </div>
         </div>
 
+        <!-- LIVE TOKEN DISPLAY BANNER (NEW ADDED) -->
+        <div style="margin-bottom: 25px;">
+            <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div>
+                    <span style="background: #2563eb; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Live Status</span>
+                    <h3 style="margin: 10px 0 5px 0; font-size: 20px;">Current Running Token</h3>
+                    <p style="margin: 0; opacity: 0.8; font-size: 13px;">Jo token is waqt screen par chal raha hai</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); border: 2px solid #3b82f6; padding: 15px 30px; border-radius: 10px; text-align: center;">
+                    <span style="font-size: 36px; font-weight: bold; color: #60a5fa;" id="live-token-number">#{{ current_token | default('0') }}</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Improved Quick Info Banner -->
         <div style="margin-bottom: 25px;">
             <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">

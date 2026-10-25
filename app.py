@@ -13,7 +13,8 @@ app.secret_key = 'cliqslip_secure_clinic_secret_key'
 
 # Supabase Configuration
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ihcghpiezdvnomfxvetu.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+# Yahan apni asli Supabase Anon Key paste kar dein (quotes ke andar)
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "YAHAN_APNI_SUPABASE_ANON_KEY_PASTE_KAREIN")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Session ko 1 saal tak permanent rakhne ke liye
@@ -201,7 +202,8 @@ def dashboard():
         return redirect(url_for('login'))
     clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
     doctor_name = session.get('doctor_name', 'Doctor')
-    return render_template('dashboard.html', clinic_name=clinic_name, doctor_name=doctor_name)
+    global DAILY_TOKEN_COUNTER
+    return render_template('dashboard.html', clinic_name=clinic_name, doctor_name=doctor_name, current_token=DAILY_TOKEN_COUNTER)
 
 @app.route('/bluetooth')
 def bluetooth():
@@ -252,7 +254,7 @@ def generate_slip():
     }
     
     session['latest_slip'] = slip_data
-    session['slip_saved'] = False  # Flag taaki print page par hi record save ho
+    session['slip_saved'] = False  
     
     return redirect(url_for('print_slip'))
 
@@ -417,11 +419,33 @@ def database_date_detail(date_str):
                            total_patients=total_patients, 
                            clinic_name=clinic_name)
 
+# MAC Address Save karne ka route
+@app.route('/save-mac', methods=['POST'])
+def save_mac():
+    if not session.get('is_logged_in'):
+        return redirect(url_for('login'))
+    esp_mac = request.form.get('esp_mac')
+    doctor_email = session.get('doctor_email')
+    
+    try:
+        supabase.table('users').update({'esp_mac': esp_mac}).eq('email', doctor_email).execute()
+    except Exception as e:
+        print(f"Error saving MAC: {e}")
+        
+    return redirect(url_for('settings'))
+
 @app.route('/settings')
 def settings():
     if not session.get('is_logged_in'):
         return redirect(url_for('login'))
-    return render_template('settings.html')
+    
+    doctor_email = session.get('doctor_email')
+    res = supabase.table('users').select("esp_mac").eq('email', doctor_email).execute()
+    esp_mac = ""
+    if res.data and len(res.data) > 0:
+        esp_mac = res.data[0].get('esp_mac', '')
+        
+    return render_template('settings.html', esp_mac=esp_mac)
 
 @app.route('/about')
 def about():
