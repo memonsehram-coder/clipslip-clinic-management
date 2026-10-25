@@ -116,6 +116,7 @@
             // Show warning for iPhone users, hide print buttons
             document.getElementById('iosWarning').style.display = 'block';
             document.querySelector('.print-btn').style.display = 'none';
+            document.getElementById('rawbtLink').style.display = 'none';
         } else if (isAndroid) {
             // Setup RawBT link for Android
             document.querySelector('.print-btn').style.display = 'none'; // hide PC print
@@ -142,7 +143,7 @@
                              `Thank you! Get well soon.\n\n\n`;
 
             const base64EscPos = btoa(unescape(encodeURIComponent(slipText)));
-            rawbtLink.href = "rawbt:data:base64," + base64EscPos;
+            rawbtLink.href = "intent://print?base64=" + base64EscPos + "#Intent;scheme=rawbt;package=ru.a402.rawbt;end;";
         }
     </script>
 </body>
