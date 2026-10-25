@@ -43,6 +43,7 @@
         }
         .pc-btn {
             background: #2563eb;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -75,14 +76,13 @@
         </div>
     </div>
 
-    <!-- RawBT Direct App Trigger Link -->
+    <!-- RawBT Print Button -->
     <a href="" id="rawbtLink" class="print-btn">Print via RawBT 📱</a>
 
     <!-- Laptop / PC Print Button -->
     <button class="print-btn pc-btn" onclick="window.print()">Print via PC (Browser) 🖨️</button>
 
     <script>
-        // Generate clean text for RawBT app automatically
         const slipText = `*** TOKEN: {{ slip.token_number }} ***\n` +
                          `{{ clinic_name }} Clinic\n` +
                          `Dr. {{ doctor_name }}\n` +
@@ -102,7 +102,7 @@
                          `Thank you! Get well soon.\n\n\n`;
 
         const base64EscPos = btoa(unescape(encodeURIComponent(slipText)));
-        document.getElementById('rawbtLink').href = "rawbt:data:base64," + base64EscPos;
+        document.getElementById('rawbtLink').href = "rawbt:base64," + base64EscPos;
     </script>
 </body>
 </html>
