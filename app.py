@@ -311,6 +311,21 @@ def api_current_token():
     return {'ok': True, 'current_token': read_current_token(email)}
 
 
+# Dashboard ka "Next Token" button (jab tak ESP32 button connect nahi hota, test ke liye)
+@app.route('/manual-next-token', methods=['POST'])
+def manual_next_token():
+    if not session.get('is_logged_in'):
+        return {'ok': False}, 401
+    email = session.get('doctor_email')
+    new_token = read_current_token(email) + 1
+    supabase.table('queue_status').upsert({
+        'doctor_email': email,
+        'current_token': new_token,
+        'date': today_pkt()
+    }).execute()
+    return {'ok': True, 'current_token': new_token}
+
+
 # ------------------------------------------------------------------
 # Slip generate + print
 # ------------------------------------------------------------------

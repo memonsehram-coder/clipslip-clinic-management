@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <!-- LIVE TOKEN DISPLAY BANNER (NEW ADDED) -->
+        <!-- LIVE TOKEN DISPLAY BANNER -->
         <div style="margin-bottom: 25px;">
             <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <div>
@@ -59,6 +59,8 @@
                 </div>
                 <div style="background: rgba(255,255,255,0.1); border: 2px solid #3b82f6; padding: 15px 30px; border-radius: 10px; text-align: center;">
                     <span style="font-size: 36px; font-weight: bold; color: #60a5fa;" id="live-token-number">#{{ current_token | default('0') }}</span>
+                    <!-- Next Token button (ESP32 button connect hone tak test ke liye) -->
+                    <button type="button" onclick="nextToken()" style="display: block; width: 100%; margin-top: 10px; background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">Next Token ➡️</button>
                 </div>
             </div>
         </div>
@@ -168,5 +170,26 @@
         }
         e.target.value = val;
     });
+
+    // Live running token: har 2 second baad server se naya number lo
+    async function refreshToken() {
+        try {
+            const r = await fetch('/api/current-token');
+            const d = await r.json();
+            if (d.ok) {
+                document.getElementById('live-token-number').innerText = '#' + d.current_token;
+            }
+        } catch (e) {}
+    }
+
+    // Next Token button (jab tak ESP32 button connect nahi hota)
+    async function nextToken() {
+        try {
+            await fetch('/manual-next-token', { method: 'POST' });
+        } catch (e) {}
+        refreshToken();
+    }
+
+    setInterval(refreshToken, 2000);
 </script>
 {% endblock %}

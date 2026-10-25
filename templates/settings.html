@@ -50,7 +50,7 @@
 
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 
-                <!-- ESP32 MAC Address Configuration (NEW ADDED) -->
+                <!-- ESP32 MAC Address Configuration -->
                 <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
                     <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">ESP32 Hardware MAC Address</h4>
                     <p style="margin: 0 0 15px 0; color: #64748b; font-size: 14px;">Apne main display (LCD/Speaker) wale ESP32 ka MAC address yahan enter karein taaki system connect ho sake.</p>
@@ -59,6 +59,16 @@
                         <input type="text" name="esp_mac" value="{{ esp_mac or '' }}" placeholder="e.g. 24:6F:28:XX:XX:XX" required style="flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
                         <button type="submit" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">Save MAC</button>
                     </form>
+
+                    <!-- Device Key (ESP32 ke code mein yahi key daalni hai) -->
+                    {% if device_key %}
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <p style="margin: 0 0 6px 0; color: #64748b; font-size: 13px;">Device Key (ESP32 ke code mein daalni hai, kisi ko share na karein):</p>
+                        <code style="display: block; background: #0f172a; color: #4ade80; padding: 10px; border-radius: 6px; font-size: 13px; word-break: break-all;">{{ device_key }}</code>
+                    </div>
+                    {% else %}
+                    <p style="margin: 12px 0 0 0; color: #64748b; font-size: 13px;">MAC save karne ke baad yahan aap ki Device Key nazar aayegi.</p>
+                    {% endif %}
                 </div>
 
                 <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
