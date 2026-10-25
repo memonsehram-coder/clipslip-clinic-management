@@ -2,72 +2,106 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Print Slip</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Slip - Token {{ slip.token_number }}</title>
     <style>
+        /* Browser print (PC) ke liye: page 58mm ka ho, A4 na ho */
+        @page { size: 58mm auto; margin: 0; }
+
+        * { box-sizing: border-box; }
+
         body {
             font-family: 'Courier New', monospace;
-            width: 58mm;
-            max-width: 58mm;
+            margin: 0;
+            padding: 12px;
+            background: #f1f5f9;
+            color: #000;
+        }
+
+        .slip {
+            width: 100%;
+            max-width: 320px;
             margin: 0 auto;
-            padding: 5px;
-            font-size: 12px;
-            background: #ffffff;
-            color: #000000;
-            box-sizing: border-box;
+            background: #fff;
+            padding: 14px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
         }
-        .center {
-            text-align: center;
-        }
-        .line {
-            border-bottom: 1px dashed #000;
-            margin: 5px 0;
-        }
-        p {
-            margin: 4px 0;
-            line-height: 1.2;
-        }
-        .print-btn {
+        .center { text-align: center; }
+        .line { border-bottom: 1px dashed #000; margin: 6px 0; }
+        .slip p { margin: 4px 0; line-height: 1.25; word-wrap: break-word; }
+        .slip h2 { margin: 4px 0; font-size: 20px; }
+        .slip h3 { margin: 4px 0; font-size: 15px; }
+
+        .actions { max-width: 320px; margin: 14px auto 0 auto; }
+        .btn {
             display: block;
             width: 100%;
-            background: #16a34a;
-            color: white;
+            padding: 15px;
+            margin-top: 10px;
             border: none;
-            padding: 14px;
-            font-size: 15px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: bold;
-            border-radius: 6px;
-            margin-top: 15px;
-            cursor: pointer;
             text-align: center;
             text-decoration: none;
+            color: #fff;
+            cursor: pointer;
+            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
-        .pc-btn {
-            background: #2563eb;
-            margin-top: 10px;
+        .btn-green { background: #16a34a; }
+        .btn-blue { background: #2563eb; }
+        .btn-gray { background: #475569; }
+
+        .warn {
+            max-width: 320px;
+            margin: 10px auto 0 auto;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* PC se print karte waqt sirf slip nikle, buttons nahi */
+        @media print {
+            body { background: #fff; padding: 0; }
+            .actions, .warn { display: none !important; }
+            .slip { width: 58mm; max-width: 58mm; box-shadow: none; border-radius: 0; padding: 2mm; font-size: 11px; }
         }
     </style>
 </head>
 <body>
-    <div id="visual-slip">
+
+    {% if not slip.saved %}
+    <div class="warn">
+        ⚠️ Slip print ho sakti hai, magar patient ka record database mein save nahi hua. Supabase ke columns check karein.
+    </div>
+    {% endif %}
+
+    <div class="slip" id="visual-slip">
         <div class="center">
             <div class="line"></div>
             <h2>*** TOKEN: {{ slip.token_number }} ***</h2>
             <div class="line"></div>
-            <h3>{{ clinic_name }} Clinic</h3>
+            <h3>{{ clinic_name }}</h3>
             <p><strong>Dr. {{ doctor_name }}</strong></p>
-            <p>{{ specialization }}</p>
-            <p>Phone: {{ clinic_phone }}</p>
+            {% if specialization %}<p>{{ specialization }}</p>{% endif %}
+            {% if clinic_phone %}<p>Phone: {{ clinic_phone }}</p>{% endif %}
         </div>
         <div class="line"></div>
         <p><strong>Patient:</strong> {{ slip.patient_name }}</p>
-        <p><strong>Age:</strong> {{ slip.patient_age }} Years</p>
+        <p><strong>Age/Sex:</strong> {{ slip.patient_age }} Years / {{ slip.gender or 'N/A' }}</p>
         <p><strong>Phone:</strong> {{ slip.patient_phone }}</p>
         <p><strong>Date:</strong> {{ slip.date }} - {{ slip.time }}</p>
         <div class="line"></div>
-        <p><strong>BP:</strong> {{ slip.blood_pressure if slip.blood_pressure else '_____________' }}</p>
-        <p><strong>Sugar:</strong> {{ slip.sugar if slip.sugar else '_____________' }}</p>
-        <p><strong>Pulse:</strong> {{ slip.heart_rate if slip.heart_rate else '_____________' }}</p>
-        <p><strong>Symptoms:</strong> {{ slip.notes if slip.notes else '_____________' }}</p>
+        <p><strong>BP:</strong> {{ slip.blood_pressure or '_____________' }}</p>
+        <p><strong>Sugar:</strong> {{ slip.sugar or '_____________' }}</p>
+        <p><strong>Pulse:</strong> {{ slip.heart_rate or '_____________' }}</p>
+        <p><strong>Symptoms:</strong> {{ slip.notes or '_____________' }}</p>
         <div class="line"></div>
         <p><strong>Fee:</strong> {{ consultation_fee }} Rupees</p>
         <div class="line"></div>
@@ -76,33 +110,15 @@
         </div>
     </div>
 
-    <!-- RawBT Print Button -->
-    <a href="" id="rawbtLink" class="print-btn">Print via RawBT 📱</a>
+    <div class="actions">
+        <!-- Mobile: RawBT ko poora print data seedha server se mil raha hai (JavaScript ki zaroorat nahi) -->
+        <a class="btn btn-green" href="rawbt:base64,{{ rawbt_data }}">🖨️ Print via RawBT (Mobile)</a>
 
-    <!-- Laptop / PC Print Button -->
-    <button class="print-btn pc-btn" onclick="window.print()">Print via PC (Browser) 🖨️</button>
+        <!-- PC / Laptop -->
+        <button class="btn btn-blue" onclick="window.print()">💻 Print via PC (Browser)</button>
 
-    <script>
-        const slipText = `*** TOKEN: {{ slip.token_number }} ***\n` +
-                         `{{ clinic_name }} Clinic\n` +
-                         `Dr. {{ doctor_name }}\n` +
-                         `Phone: {{ clinic_phone }}\n` +
-                         `--------------------------------\n` +
-                         `Patient: {{ slip.patient_name }}\n` +
-                         `Age: {{ slip.patient_age }} Years\n` +
-                         `Phone: {{ slip.patient_phone }}\n` +
-                         `Date: {{ slip.date }} - {{ slip.time }}\n` +
-                         `--------------------------------\n` +
-                         `BP: {{ slip.blood_pressure if slip.blood_pressure else 'N/A' }}\n` +
-                         `Sugar: {{ slip.sugar if slip.sugar else 'N/A' }}\n` +
-                         `Pulse: {{ slip.heart_rate if slip.heart_rate else 'N/A' }}\n` +
-                         `Symptoms: {{ slip.notes if slip.notes else 'N/A' }}\n` +
-                         `--------------------------------\n` +
-                         `Fee: {{ consultation_fee }} Rupees\n` +
-                         `Thank you! Get well soon.\n\n\n`;
+        <a class="btn btn-gray" href="/dashboard">➕ Next Patient / Dashboard</a>
+    </div>
 
-        const base64EscPos = btoa(unescape(encodeURIComponent(slipText)));
-        document.getElementById('rawbtLink').href = "rawbt:base64," + base64EscPos;
-    </script>
 </body>
 </html>
