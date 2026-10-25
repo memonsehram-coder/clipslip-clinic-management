@@ -40,7 +40,7 @@ def today_pkt():
 
 
 # ------------------------------------------------------------------
-# Email OTP (password ab environment variable se aayega, code mein nahi)
+# Email OTP
 # ------------------------------------------------------------------
 def send_email_otp(receiver_email, otp):
     sender_email = os.environ.get("GMAIL_USER", "clipslip.official@gmail.com")
@@ -230,7 +230,6 @@ def doctor_form():
                 'specialization': specialization
             }).eq('email', email).execute()
         except Exception as e:
-            # Agar naye columns abhi Supabase mein nahi bane to kam az kam naam save ho jaye
             print(f"Profile full update failed: {e}")
             supabase.table('users').update({
                 'doctor_name': doctor_name,
@@ -242,7 +241,7 @@ def doctor_form():
 
 
 # ------------------------------------------------------------------
-# Live token (serving token) helpers - ESP32 + website yahin se sync hote hain
+# Live token helpers
 # ------------------------------------------------------------------
 def read_current_token(email):
     try:
@@ -284,7 +283,6 @@ def bluetooth():
     return render_template('bluetooth.html', clinic_name=clinic_name, doctor_name=doctor_name)
 
 
-# Button wala ESP32 yeh route call karega (POST JSON: mac, key)
 @app.route('/api/next-token', methods=['POST'])
 def api_next_token():
     data = request.get_json(silent=True) or {}
@@ -300,7 +298,6 @@ def api_next_token():
     return {'ok': True, 'current_token': new_token}
 
 
-# LCD wala ESP32 (?mac=...&key=...) aur website dashboard (login session) dono yeh call karte hain
 @app.route('/api/current-token')
 def api_current_token():
     email = doctor_from_device(request.args.get('mac'), request.args.get('key'))
@@ -311,7 +308,6 @@ def api_current_token():
     return {'ok': True, 'current_token': read_current_token(email)}
 
 
-# Dashboard ka "Next Token" button (jab tak ESP32 button connect nahi hota, test ke liye)
 @app.route('/manual-next-token', methods=['POST'])
 def manual_next_token():
     if not session.get('is_logged_in'):
@@ -327,7 +323,7 @@ def manual_next_token():
 
 
 # ------------------------------------------------------------------
-# Slip generate + print
+# Slip generate + print (Safe DB Insert)
 # ------------------------------------------------------------------
 @app.route('/generate-slip', methods=['POST'])
 def generate_slip():
@@ -339,7 +335,7 @@ def generate_slip():
     current_time = now.strftime("%I:%M %p")
     email = session.get('doctor_email')
 
-    # Aaj ka agla token database se nikalo (global variable Vercel par kaam nahi karta)
+    # Token number calculate karna
     token_number = 1
     try:
         res = supabase.table('patients').select("token").eq('doctor_email', email).eq('date', current_date).execute()
@@ -363,22 +359,29 @@ def generate_slip():
         'saved': True
     }
 
-    # Database mein save karo. Fail ho bhi jaye to print block nahi hoga.
+    # Safe Database Insert (ताकि कॉलम मिसमैच पर एरर न आए)
     try:
-        supabase.table('patients').insert({
+        insert_data = {
             'doctor_email': email,
             'token': str(token_number),
             'date': current_date,
             'time': current_time,
-            'patient_name': slip_data['patient_name'],
-            'patient_age': slip_data['patient_age'],
-            'gender': slip_data['gender'],
-            'phone': slip_data['patient_phone'],
-            'bp': slip_data['blood_pressure'],
-            'heart_rate': slip_data['heart_rate'],
-            'sugar': slip_data['sugar'],
-            'notes': slip_data['notes']
-        }).execute()
+            'patient_name': slip_data.get('patient_name'),
+            'phone': slip_data.get('patient_phone'),
+            'bp': slip_data.get('blood_pressure'),
+            'sugar': slip_data.get('sugar')
+        }
+        
+        if slip_data.get('patient_age'):
+            insert_data['patient_age'] = slip_data.get('patient_age')
+        if slip_data.get('notes'):
+            insert_data['notes'] = slip_data.get('notes')
+        if slip_data.get('gender'):
+            insert_data['gender'] = slip_data.get('gender')
+        if slip_data.get('heart_rate'):
+            insert_data['heart_rate'] = slip_data.get('heart_rate')
+
+        supabase.table('patients').insert(insert_data).execute()
     except Exception as e:
         print(f"Patient save error: {e}")
         slip_data['saved'] = False
@@ -388,16 +391,13 @@ def generate_slip():
 
 
 def clean_doctor_name(name):
-    # "Dr. Ali Khan" likha ho to "Dr. Dr. Ali Khan" na bane
     return re.sub(r'^\s*dr\.?\s*', '', name or '', flags=re.I).strip() or 'Doctor'
 
 
 def build_escpos(slip, clinic_name, doctor_name, clinic_phone, specialization, fee):
-    """58mm thermal printer ke liye asli ESC/POS bytes (RawBT inhein seedha print karta hai)."""
-    W = 32  # 58mm printer par aam taur par 32 characters per line
+    W = 32
 
     def enc(s):
-        # Urdu/special characters thermal printer par garbage na bane, is liye '?' ban jayenge
         return str(s).encode('ascii', 'replace')
 
     def line(s=''):
@@ -411,7 +411,7 @@ def build_escpos(slip, clinic_name, doctor_name, clinic_phone, specialization, f
     BIG_ON, BIG_OFF = b'\x1d\x21\x11', b'\x1d\x21\x00'
     CENTER, LEFT = b'\x1b\x61\x01', b'\x1b\x61\x00'
 
-    out = b'\x1b\x40'  # printer reset
+    out = b'\x1b\x40'
     out += CENTER
     out += BOLD_ON + BIG_ON + line(f"TOKEN {slip['token_number']}") + BIG_OFF + BOLD_OFF
     out += sep
@@ -468,7 +468,7 @@ def print_slip():
 
 
 # ------------------------------------------------------------------
-# Database (records) pages
+# Database pages
 # ------------------------------------------------------------------
 @app.route('/database')
 def database():
@@ -581,7 +581,6 @@ def database_date_detail(date_str):
     for r in all_records:
         r_date = str(r.get('date', ''))
         if r_date == date_str or r_date.startswith(date_str):
-            # Template ke purane naam (token_number, patient_phone, blood_pressure) ke saath match
             r['token_number'] = r.get('token')
             r['patient_phone'] = r.get('phone')
             r['blood_pressure'] = r.get('bp')
