@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}CliqSlip - Settings{% endblock %}
+
+{% block content %}
+<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
+    
+    <!-- Sidebar -->
+    <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+                <h3 style="margin: 0; font-size: 16px; color: #0f172a; font-weight: 700;">CliqSlip</h3>
+            </div>
+            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s;">🗂️ Database</a>
+            <a href="/settings" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
+            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="width: 100%; max-width: 800px; padding: 40px; box-sizing: border-box; margin: 0 auto;">
+        
+        <!-- Top Bar with Hamburger Button -->
+        <div style="background: #ffffff; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    ☰
+                </button>
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain;">
+                <div>
+                    <h2 style="margin: 0 0 2px 0; color: #1e293b; font-size: 18px;">Settings</h2>
+                    <span style="color: #64748b; font-size: 12px;">Manage Clinic & System Preferences</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Card Box -->
+        <div style="background: white; padding: 35px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); color: #334155;">
+            
+            <h3 style="margin-top: 0; color: #1e293b; font-size: 20px; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 25px;">
+                ⚙️ Application & Clinic Settings
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- ESP32 MAC Address Configuration -->
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">ESP32 Hardware MAC Address</h4>
+                    <p style="margin: 0 0 15px 0; color: #64748b; font-size: 14px;">Apne main display (LCD/Speaker) wale ESP32 ka MAC address yahan enter karein taaki system connect ho sake.</p>
+                    
+                    <form action="/save-mac" method="POST" style="display: flex; gap: 10px;">
+                        <input type="text" name="esp_mac" value="{{ esp_mac or '' }}" placeholder="e.g. 24:6F:28:XX:XX:XX" required style="flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                        <button type="submit" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">Save MAC</button>
+                    </form>
+
+                    <!-- Device Key (ESP32 ke code mein yahi key daalni hai) -->
+                    {% if device_key %}
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <p style="margin: 0 0 6px 0; color: #64748b; font-size: 13px;">Device Key (ESP32 ke code mein daalni hai, kisi ko share na karein):</p>
+                        <code style="display: block; background: #0f172a; color: #4ade80; padding: 10px; border-radius: 6px; font-size: 13px; word-break: break-all;">{{ device_key }}</code>
+                    </div>
+                    {% else %}
+                    <p style="margin: 12px 0 0 0; color: #64748b; font-size: 13px;">MAC save karne ke baad yahan aap ki Device Key nazar aayegi.</p>
+                    {% endif %}
+                </div>
+
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">Clinic Profile Management</h4>
+                    <p style="margin: 0 0 15px 0; color: #64748b; font-size: 14px;">Aap apne clinic ka naam, doctor ki tafseelaat aur consultation fee yahan se update kar sakte hain.</p>
+                    <a href="/doctor-form" style="display: inline-block; background: #2563eb; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">Edit Clinic Details</a>
+                </div>
+
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">Bluetooth & Thermal Printer</h4>
+                    <p style="margin: 0 0 15px 0; color: #64748b; font-size: 14px;">Thermal printer pairing aur Bluetooth settings configure karne ke liye niche click karein.</p>
+                    <a href="/bluetooth" style="display: inline-block; background: #0f172a; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">Configure Bluetooth</a>
+                </div>
+
+                <div style="background: #fef2f2; padding: 20px; border-radius: 10px; border: 1px solid #fecaca;">
+                    <h4 style="margin: 0 0 8px 0; color: #991b1b; font-size: 16px;">Session & Account</h4>
+                    <p style="margin: 0 0 15px 0; color: #7f1d1d; font-size: 14px;">Apne account se securely logout karne ke liye button dabayein.</p>
+                    <a href="/logout" style="display: inline-block; background: #dc2626; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">Log Out</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('app-sidebar');
+        if (sidebar.style.transform === 'translateX(0px)') {
+            sidebar.style.transform = 'translateX(-100%)';
+        } else {
+            sidebar.style.transform = 'translateX(0px)';
+        }
+    }
+</script>
+{% endblock %}

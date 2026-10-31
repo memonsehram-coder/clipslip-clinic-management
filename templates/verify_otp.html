@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}CliqSlip - Verify OTP{% endblock %}
+
+{% block content %}
+<div class="split-login-container">
+    <div class="login-left-side">
+        <div class="login-form-box">
+            <div class="brand-title-area">
+                <h1 class="company-name">Verify Email</h1>
+                <p class="company-tagline">Please enter the 6-digit OTP sent to your email</p>
+            </div>
+
+            <!-- 2-Minute Timer Display -->
+            <div id="timer-box" style="margin-bottom: 15px; font-weight: 600; color: #d9534f; font-size: 14px;">
+                Code expires in: <span id="countdown">02:00</span>
+            </div>
+
+            <form action="/verify-otp" method="POST">
+                <div class="input-group">
+                    <label for="otp">Enter 6-Digit OTP</label>
+                    <input type="text" id="otp" name="otp" required maxlength="6" placeholder="123456" style="letter-spacing: 4px; font-size: 18px; text-align: center;">
+                </div>
+                <button type="submit" class="btn-login" style="margin-top: 10px;">Verify & Continue</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="login-right-side">
+        <div class="image-frame-card">
+            <img src="{{ url_for('static', filename='login_bg.png') }}" alt="Clinic Background" class="right-bg-img">
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for 2-Minute Countdown Timer -->
+<script>
+    let timeRemaining = 120; // 120 seconds = 2 minutes
+    const countdownElement = document.getElementById('countdown');
+
+    const timerInterval = setInterval(() => {
+        let minutes = Math.floor(timeRemaining / 60);
+        let seconds = timeRemaining % 60;
+
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+
+        countdownElement.textContent = `${minutes}:${seconds}`;
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById('timer-box').innerHTML = '<span style="color: red;">OTP has expired! Please resend code.</span>';
+        } else {
+            timeRemaining--;
+        }
+    }, 1000);
+</script>
+{% endblock %}

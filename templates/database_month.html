@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}CliqSlip - Patient Records Database{% endblock %}
+
+{% block content %}
+<div style="display: flex; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif; position: relative; justify-content: center;">
+    
+    <!-- Sidebar (Default Closed) -->
+    <div id="app-sidebar" style="width: 250px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100%; z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
+        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px;">
+                <h3 style="margin: 0; font-size: 16px; color: #0f172a;">CliqSlip</h3>
+            </div>
+            <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+            <a href="/dashboard" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">📊 Dashboard</a>
+            <a href="/database" style="padding: 10px 15px; background: #eff6ff; color: #2563eb; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">🗂️ Database Records</a>
+            <a href="/bluetooth" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">🔵 Bluetooth Connection</a>
+            <a href="/settings" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">⚙️ Settings</a>
+            <a href="/about" style="padding: 10px 15px; color: #475569; border-radius: 6px; text-decoration: none; font-size: 14px;">ℹ️ About</a>
+            <a href="/logout" style="padding: 10px 15px; color: #dc2626; border-radius: 6px; text-decoration: none; font-size: 14px; margin-top: 10px;">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="width: 100%; max-width: 900px; padding: 30px; box-sizing: border-box; margin: 0 auto;">
+        
+        <!-- Header with Hamburger Button -->
+        <div style="background: #ffffff; padding: 20px 25px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button onclick="toggleSidebar()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    ☰
+                </button>
+                <div>
+                    <h2 style="margin: 0 0 4px 0; color: #0f172a; font-size: 20px;">Patient Records Archive</h2>
+                    <span style="color: #64748b; font-size: 13px;">{{ clinic_name }}</span>
+                </div>
+            </div>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
+        </div>
+
+        <!-- Year Selector Bar -->
+        <div style="background: white; padding: 15px 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #1e293b; font-size: 16px;">Select Year</h3>
+            <div style="display: flex; gap: 8px;">
+                {% for y in available_years %}
+                <a href="/database?year={{ y }}" style="padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; background: {% if y == selected_year %}#2563eb{% else %}#f1f5f9{% endif %}; color: {% if y == selected_year %}#ffffff{% else %}#475569{% endif %}; border: 1px solid {% if y == selected_year %}#2563eb{% else %}#cbd5e1{% endif %};">
+                    {{ y }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Months Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px;">
+            {% for m in months %}
+            <a href="/database/month/{{ m.month_year }}" style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.03); display: block; transition: 0.2s;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 24px;">📁</span>
+                    <span style="background: {% if m.count > 0 %}#eff6ff{% else %}#f1f5f9{% endif %}; color: {% if m.count > 0 %}#2563eb{% else %}#64748b{% endif %}; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {{ m.count }} Patients
+                    </span>
+                </div>
+                <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 16px;">{{ m.name }} {{ selected_year }}</h4>
+                <span style="color: #64748b; font-size: 12px;">Click to view dates</span>
+            </a>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('app-sidebar');
+        if (sidebar.style.transform === 'translateX(0px)') {
+            sidebar.style.transform = 'translateX(-100%)';
+        } else {
+            sidebar.style.transform = 'translateX(0px)';
+        }
+    }
+</script>
+{% endblock %}
