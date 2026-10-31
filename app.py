@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import timedelta, datetime, timezone
+from urllib.parse import urlparse
 import calendar
-import random
+import hashlib
+import hmac
 import smtplib
 import secrets
 import base64
@@ -10,9 +12,16 @@ import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from supabase import create_client, Client
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-in-vercel")
+
+# SECRET_KEY Vercel ke Environment Variables me zaroor set karein (lamba random).
+_secret = os.environ.get("SECRET_KEY")
+if not _secret:
+    print("WARNING: SECRET_KEY set nahi hai! Vercel me set karein, warna OTP/login kharab ho sakta hai.")
+    _secret = secrets.token_hex(32)
+app.secret_key = _secret
 
 # Supabase Configuration (Using Environment Variables securely)
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ihcghpiezdvnomfxvetu.supabase.co")
@@ -22,12 +31,40 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # Session ko 1 saal tak permanent rakhne ke liye
 app.permanent_session_lifetime = timedelta(days=365)
 
+# Cookie security
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    MAX_CONTENT_LENGTH=1 * 1024 * 1024,
+)
+
 PKT = timezone(timedelta(hours=5))
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 
+# ------------------------------------------------------------------
+# Security hooks
+# ------------------------------------------------------------------
 @app.before_request
-def make_session_permanent():
+def security_checks():
     session.permanent = True
+    # Dusri website se aayi POST request block (CSRF se bachav)
+    if request.method == 'POST':
+        origin = request.headers.get('Origin')
+        if origin and urlparse(origin).netloc != request.host:
+            return "Request blocked.", 403
+
+
+@app.after_request
+def add_security_headers(resp):
+    resp.headers['X-Content-Type-Options'] = 'nosniff'
+    resp.headers['X-Frame-Options'] = 'DENY'
+    resp.headers['Referrer-Policy'] = 'same-origin'
+    resp.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    if request.endpoint != 'static':
+        resp.headers['Cache-Control'] = 'no-store'
+    return resp
 
 
 def now_pkt():
@@ -36,6 +73,102 @@ def now_pkt():
 
 def today_pkt():
     return now_pkt().strftime("%Y-%m-%d")
+
+
+def clip(value, n=200):
+    """User input ko lambai tak kaat do."""
+    if value is None:
+        return None
+    return str(value).strip()[:n]
+
+
+# ------------------------------------------------------------------
+# Rate limit (Supabase ke login_attempts table se; Vercel par bhi chalta hai)
+# ------------------------------------------------------------------
+LIMITS = {            # action: (kitni koshish, kitne second me)
+    'login':  (5, 600),
+    'forgot': (3, 900),
+    'signup': (3, 900),
+    'otp':    (5, 600),
+}
+
+
+def client_ip():
+    fwd = request.headers.get('X-Forwarded-For', '')
+    return fwd.split(',')[0].strip() or request.remote_addr or 'unknown'
+
+
+def blocked(action, *idents):
+    limit, window = LIMITS[action]
+    since = (datetime.now(timezone.utc) - timedelta(seconds=window)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    for ident in idents:
+        if not ident:
+            continue
+        try:
+            res = (supabase.table('login_attempts').select("id")
+                   .eq('bucket', f"{action}:{ident}").gte('created_at', since)
+                   .limit(limit).execute())
+            if len(res.data or []) >= limit:
+                return True
+        except Exception as e:
+            print(f"Rate limit check failed: {e}")
+    return False
+
+
+def record(action, *idents):
+    try:
+        rows = [{'bucket': f"{action}:{i}"} for i in idents if i]
+        if rows:
+            supabase.table('login_attempts').insert(rows).execute()
+        if secrets.randbelow(50) == 0:   # kabhi kabhi purani entries saaf
+            old = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            supabase.table('login_attempts').delete().lt('created_at', old).execute()
+    except Exception as e:
+        print(f"Rate limit record failed: {e}")
+
+
+# ------------------------------------------------------------------
+# Password + OTP helpers
+# ------------------------------------------------------------------
+def verify_password(user_row, password):
+    stored = user_row.get('password') or ''
+    password = password or ''
+    if stored.startswith(('scrypt:', 'pbkdf2:')):
+        return check_password_hash(stored, password)
+    # Purana plain-text password: match hua to turant hash karke save kar do
+    if hmac.compare_digest(stored.encode(), password.encode()):
+        try:
+            supabase.table('users').update(
+                {'password': generate_password_hash(password)}
+            ).eq('email', user_row['email']).execute()
+        except Exception as e:
+            print(f"Password upgrade failed: {e}")
+        return True
+    return False
+
+
+def make_otp_hash(email, otp):
+    # OTP session cookie me seedha nahi rakhte (cookie padhi ja sakti hai), uska hash rakhte hain
+    msg = f"{email}:{otp}".encode()
+    return hmac.new(app.secret_key.encode(), msg, hashlib.sha256).hexdigest()
+
+
+def clear_otp_session():
+    for k in ('otp_hash', 'otp_time', 'otp_tries', 'otp_verified', 'is_forgot', 'signup_email'):
+        session.pop(k, None)
+
+
+def new_otp_session(email, forgot):
+    otp = secrets.randbelow(900000) + 100000
+    clear_otp_session()
+    session['signup_email'] = email
+    session['otp_hash'] = make_otp_hash(email, otp)
+    session['otp_time'] = now_pkt().timestamp()
+    session['otp_tries'] = 0
+    session['otp_verified'] = False
+    if forgot:
+        session['is_forgot'] = True
+    send_email_otp(email, otp)
 
 
 # ------------------------------------------------------------------
@@ -88,55 +221,65 @@ def login():
     if session.get('is_logged_in'):
         return redirect(url_for('dashboard'))
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = (request.form.get('email') or '').strip()
+        password = request.form.get('password') or ''
+        ip = client_ip()
+
+        if blocked('login', email.lower(), ip):
+            return "Too many attempts! Please wait 10 minutes and try again.", 429
 
         response = supabase.table('users').select("*").eq('email', email).execute()
         users = response.data
 
-        if users and users[0]['password'] == password:
+        if users and verify_password(users[0], password):
+            session.clear()
+            session.permanent = True
             session['is_logged_in'] = True
             session['doctor_email'] = email
             load_profile_into_session(users[0])
             return redirect(url_for('dashboard'))
-        else:
-            return "Invalid Email or Password! Please try again."
+
+        record('login', email.lower(), ip)
+        return "Invalid Email or Password! Please try again."
     return render_template('login.html')
 
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        email = request.form.get('email')
-        response = supabase.table('users').select("*").eq('email', email).execute()
+        email = (request.form.get('email') or '').strip()
+        ip = client_ip()
+        if not EMAIL_RE.match(email):
+            return "Please enter a valid email address."
+        if blocked('forgot', email.lower(), ip):
+            return "Too many requests! Please wait 15 minutes and try again.", 429
+        record('forgot', email.lower(), ip)
+
+        response = supabase.table('users').select("email").eq('email', email).execute()
         if response.data:
-            otp = random.randint(100000, 999999)
-            session['signup_email'] = email
-            session['email_otp'] = otp
-            session['is_forgot'] = True
-            session['otp_time'] = now_pkt().timestamp()
-            send_email_otp(email, otp)
-            return redirect(url_for('verify_otp'))
+            new_otp_session(email, forgot=True)
         else:
-            return "Email not found in database! Please check again."
+            clear_otp_session()   # email na mile tab bhi same page dikhao (email ka pata na chale)
+        return redirect(url_for('verify_otp'))
     return render_template('forgot_password.html')
 
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = (request.form.get('email') or '').strip()
+        ip = client_ip()
+        if not EMAIL_RE.match(email):
+            return render_template('signup.html', error="Please enter a valid email address.")
+        if blocked('signup', email.lower(), ip):
+            return render_template('signup.html', error="Too many requests! Please wait 15 minutes."), 429
+        record('signup', email.lower(), ip)
 
-        existing_user = supabase.table('users').select("*").eq('email', email).execute()
+        existing_user = supabase.table('users').select("email").eq('email', email).execute()
         if existing_user.data:
             return render_template('signup.html', error="This email is already registered! Please sign in instead.")
 
-        session['signup_email'] = email
-        otp = random.randint(100000, 999999)
-        session['email_otp'] = otp
-        session['otp_time'] = now_pkt().timestamp()
-
-        send_email_otp(email, otp)
+        new_otp_session(email, forgot=False)
         return redirect(url_for('verify_otp'))
     return render_template('signup.html')
 
@@ -144,55 +287,71 @@ def signup():
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
     if request.method == 'POST':
-        user_entered_otp = request.form.get('otp')
-        otp_time = session.get('otp_time', 0)
-        current_time = now_pkt().timestamp()
+        email = session.get('signup_email')
+        otp_hash = session.get('otp_hash')
+        if not email or not otp_hash:
+            return "Invalid OTP! Please try again."
 
-        if current_time - otp_time > 120:
+        ip = client_ip()
+        if session.get('otp_tries', 0) >= 5 or blocked('otp', email.lower(), ip):
+            clear_otp_session()
+            return "Too many wrong attempts! Please go back and request a new code.", 429
+
+        if now_pkt().timestamp() - session.get('otp_time', 0) > 120:
+            clear_otp_session()
             return "OTP has expired! Please go back and resend a new code."
 
-        try:
-            entered = int(user_entered_otp)
-        except (TypeError, ValueError):
-            return "Invalid OTP! Please try again."
-
-        if entered == session.get('email_otp'):
+        entered = (request.form.get('otp') or '').strip()
+        if hmac.compare_digest(make_otp_hash(email, entered), otp_hash):
+            session['otp_verified'] = True
+            session.pop('otp_hash', None)
             return redirect(url_for('set_password'))
-        else:
-            return "Invalid OTP! Please try again."
+
+        session['otp_tries'] = session.get('otp_tries', 0) + 1
+        record('otp', email.lower(), ip)
+        return "Invalid OTP! Please try again."
     return render_template('verify_otp.html')
 
 
 @app.route('/set-password', methods=['GET', 'POST'])
 def set_password():
+    # OTP verify kiye bina is page par aana mana hai
+    if not session.get('otp_verified') or not session.get('signup_email'):
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
+        password = request.form.get('password') or ''
+        confirm_password = request.form.get('confirm_password') or ''
         if password != confirm_password:
             return "Passwords do not match! Please try again."
+        if len(password) < 8:
+            return "Password must be at least 8 characters long."
 
         email = session.get('signup_email')
-        if not email:
-            return "Session expired! Please go back to signup or login and try again."
+        is_forgot = session.get('is_forgot')
 
         existing = None
         try:
             existing = supabase.table('users').select("*").eq('email', email).execute()
-
+            hashed = generate_password_hash(password)
             if existing.data:
-                supabase.table('users').update({'password': password}).eq('email', email).execute()
+                supabase.table('users').update({'password': hashed}).eq('email', email).execute()
             else:
-                supabase.table('users').insert({'email': email, 'password': password}).execute()
+                supabase.table('users').insert({'email': email, 'password': hashed}).execute()
         except Exception as e:
-            return f"Database Error: {str(e)}"
+            print(f"Database Error: {e}")
+            return "Something went wrong! Please try again."
 
+        profile_row = existing.data[0] if (existing is not None and existing.data) else None
+
+        session.clear()
+        session.permanent = True
         session['is_logged_in'] = True
         session['doctor_email'] = email
 
-        if session.get('is_forgot'):
-            session.pop('is_forgot', None)
-            if existing and existing.data:
-                load_profile_into_session(existing.data[0])
+        if is_forgot:
+            if profile_row:
+                load_profile_into_session(profile_row)
             return redirect(url_for('dashboard'))
 
         return redirect(url_for('doctor_form'))
@@ -257,7 +416,7 @@ def doctor_from_device(mac, key):
         return None
     mac = mac.strip().upper()
     res = supabase.table('users').select("email, device_key").eq('esp_mac', mac).execute()
-    if res.data and res.data[0].get('device_key') == key:
+    if res.data and hmac.compare_digest(str(res.data[0].get('device_key') or ''), str(key)):
         return res.data[0]['email']
     return None
 
@@ -346,14 +505,14 @@ def generate_slip():
         'token_number': token_number,
         'date': current_date,
         'time': current_time,
-        'patient_name': request.form.get('patient_name'),
-        'patient_age': request.form.get('patient_age'),
-        'gender': request.form.get('patient_gender'),
-        'patient_phone': request.form.get('patient_phone'),
-        'blood_pressure': request.form.get('blood_pressure'),
-        'heart_rate': request.form.get('heart_rate'),
-        'sugar': request.form.get('sugar'),
-        'notes': request.form.get('notes'),
+        'patient_name': clip(request.form.get('patient_name'), 100),
+        'patient_age': clip(request.form.get('patient_age'), 50),
+        'gender': clip(request.form.get('patient_gender'), 50),
+        'patient_phone': clip(request.form.get('patient_phone'), 50),
+        'blood_pressure': clip(request.form.get('blood_pressure'), 50),
+        'heart_rate': clip(request.form.get('heart_rate'), 50),
+        'sugar': clip(request.form.get('sugar'), 50),
+        'notes': clip(request.form.get('notes'), 1000),
         'saved': True
     }
 
@@ -543,7 +702,7 @@ def database_month_detail(month_year):
         month_num = list(calendar.month_name).index(month_name)
     except Exception as e:
         print(f"Error parsing month_year: {e}")
-        return f"Routing Error: {e} (Value received: {month_year})"
+        return "Invalid month.", 400
 
     num_days = calendar.monthrange(year, month_num)[1]
     dates_list = []
@@ -601,7 +760,7 @@ def database_date_detail(date_str):
 def save_mac():
     if not session.get('is_logged_in'):
         return redirect(url_for('login'))
-    esp_mac = (request.form.get('esp_mac') or '').strip().upper()
+    esp_mac = (request.form.get('esp_mac') or '').strip().upper()[:32]
     doctor_email = session.get('doctor_email')
 
     try:
@@ -647,4 +806,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=os.environ.get('FLASK_DEBUG') == '1', host='0.0.0.0', port=5000)
