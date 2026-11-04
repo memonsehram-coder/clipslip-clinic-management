@@ -4,19 +4,17 @@ from urllib.parse import urlparse
 import calendar
 import hashlib
 import hmac
-import smtplib
 import secrets
 import base64
 import re
 import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from supabase import create_client, Client
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# SECRET_KEY Vercel ke Environment Variables me zaroor set karein (lamba random).
+# SECRET_KEY Vercel ke Environment Variables me zaroor set karein
 _secret = os.environ.get("SECRET_KEY")
 if not _secret:
     print("WARNING: SECRET_KEY set nahi hai! Vercel me set karein.")
@@ -27,7 +25,7 @@ if not _secret:
         _secret = secrets.token_hex(32)
 app.secret_key = _secret
 
-# Supabase Configuration (Environment Variables se)
+# Supabase Configuration
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ihcghpiezdvnomfxvetu.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -183,36 +181,42 @@ def otp_resend_url():
 
 
 # ------------------------------------------------------------------
-# Email OTP (Updated to Port 465 SMTP_SSL for Vercel reliability)
+# Email OTP (Resend HTTP API - 100% Reliable on Vercel)
 # ------------------------------------------------------------------
 def send_email_otp(receiver_email, otp):
-    sender_email = os.environ.get("GMAIL_USER", "clipslip.official@gmail.com")
-    sender_password = (os.environ.get("GMAIL_APP_PASSWORD", "") or "").replace(" ", "")
-
-    if not sender_password:
-        print("Email sending failed: GMAIL_APP_PASSWORD Vercel me set nahi hai.")
+    api_key = os.environ.get("RESEND_API_KEY", "")
+    if not api_key:
+        print("Email sending failed: RESEND_API_KEY Vercel me set nahi hai.")
         return False
 
-    message = MIMEMultipart("alternative")
-    message["Subject"] = "CliqSlip - Verification Code"
-    message["From"] = sender_email
-    message["To"] = receiver_email
-
-    html = f"""
-    <h3>CliqSlip Clinic Management</h3>
-    <p>Aapka tasdeeqi code (OTP) yeh hai:</p>
-    <h2>{otp}</h2>
-    <p>Yeh code sirf 2 minute ke liye karamad hai. Isay kisi ke sath share na karein.</p>
-    """
-    message.attach(MIMEText(html, "html"))
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # Resend free tier ke liye onboarding@resend.dev use hota hai jab tak custom domain na ho
+    payload = {
+        "from": "CliqSlip <onboarding@resend.dev>",
+        "to": [receiver_email],
+        "subject": "CliqSlip - Verification Code",
+        "html": f"""
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h3>CliqSlip Clinic Management</h3>
+            <p>Aapka tasdeeqi code (OTP) yeh hai:</p>
+            <h2 style="color: #2563eb; font-size: 32px; letter-spacing: 2px;">{otp}</h2>
+            <p>Yeh code sirf 2 minute ke liye karamad hai. Isay kisi ke sath share na karein.</p>
+        </div>
+        """
+    }
 
     try:
-        # Port 465 aur SMTP_SSL Vercel serverless par sab se best aur reliable hai
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15)
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
-        server.quit()
-        return True
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        if response.status_code in [200, 201]:
+            return True
+        else:
+            print(f"Resend API error response: {response.text}")
+            return False
     except Exception as e:
         print(f"Email sending failed error: {e}")
         return False
