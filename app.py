@@ -17,13 +17,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 
 # SECRET_KEY Vercel ke Environment Variables me zaroor set karein (lamba random).
+# Agar set na ho to SUPABASE_KEY se ek stable key banti hai, taaki Vercel ke alag alag
+# instances par OTP/login session na toote (random key har instance par alag hoti hai).
 _secret = os.environ.get("SECRET_KEY")
 if not _secret:
-    print("WARNING: SECRET_KEY set nahi hai! Vercel me set karein, warna OTP/login kharab ho sakta hai.")
-    _secret = secrets.token_hex(32)
+    print("WARNING: SECRET_KEY set nahi hai! Vercel me set karein.")
+    _base = os.environ.get("SUPABASE_KEY", "")
+    if _base:
+        _secret = hashlib.sha256(("cliqslip-session:" + _base).encode()).hexdigest()
+    else:
+        _secret = secrets.token_hex(32)
 app.secret_key = _secret
 
-# Supabase Configuration (Using Environment Variables securely)
+# Supabase Configuration (Environment Variables se)
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ihcghpiezdvnomfxvetu.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -159,6 +165,7 @@ def clear_otp_session():
 
 
 def new_otp_session(email, forgot):
+    """OTP banao aur email karo. Email chali gayi to True, warna False."""
     otp = secrets.randbelow(900000) + 100000
     clear_otp_session()
     session['signup_email'] = email
@@ -168,7 +175,19 @@ def new_otp_session(email, forgot):
     session['otp_verified'] = False
     if forgot:
         session['is_forgot'] = True
-    send_email_otp(email, otp)
+    sent = send_email_otp(email, otp)
+    if not sent:
+        clear_otp_session()
+    return sent
+
+
+def otp_seconds_left():
+    """OTP expire hone mein kitne second baqi hain (2 minute ki limit)."""
+    return max(0, int(120 - (now_pkt().timestamp() - session.get('otp_time', 0))))
+
+
+def otp_resend_url():
+    return url_for('forgot_password') if session.get('is_forgot') else url_for('signup')
 
 
 # ------------------------------------------------------------------
@@ -176,7 +195,11 @@ def new_otp_session(email, forgot):
 # ------------------------------------------------------------------
 def send_email_otp(receiver_email, otp):
     sender_email = os.environ.get("GMAIL_USER", "clipslip.official@gmail.com")
-    sender_password = os.environ.get("GMAIL_APP_PASSWORD", "")
+    sender_password = (os.environ.get("GMAIL_APP_PASSWORD", "") or "").replace(" ", "")
+
+    if not sender_password:
+        print("Email sending failed: GMAIL_APP_PASSWORD Vercel me set nahi hai.")
+        return False
 
     message = MIMEMultipart("alternative")
     message["Subject"] = "CliqSlip - Verification Code"
@@ -192,7 +215,7 @@ def send_email_otp(receiver_email, otp):
     message.attach(MIMEText(html, "html"))
 
     try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, receiver_email, message.as_string())
@@ -226,7 +249,9 @@ def login():
         ip = client_ip()
 
         if blocked('login', email.lower(), ip):
-            return "Too many attempts! Please wait 10 minutes and try again.", 429
+            return render_template('login.html',
+                                   error="Bohat zyada koshishen ho gayin. 10 minute baad dobara try karein.",
+                                   email=email), 429
 
         response = supabase.table('users').select("*").eq('email', email).execute()
         users = response.data
@@ -240,7 +265,9 @@ def login():
             return redirect(url_for('dashboard'))
 
         record('login', email.lower(), ip)
-        return "Invalid Email or Password! Please try again."
+        return render_template('login.html',
+                               error="Email ya password galat hai. Dobara koshish karein.",
+                               email=email)
     return render_template('login.html')
 
 
@@ -250,14 +277,20 @@ def forgot_password():
         email = (request.form.get('email') or '').strip()
         ip = client_ip()
         if not EMAIL_RE.match(email):
-            return "Please enter a valid email address."
+            return render_template('forgot_password.html',
+                                   error="Sahi email address likhein.", email=email)
         if blocked('forgot', email.lower(), ip):
-            return "Too many requests! Please wait 15 minutes and try again.", 429
+            return render_template('forgot_password.html',
+                                   error="Bohat zyada requests ho gayin. 15 minute baad dobara try karein.",
+                                   email=email), 429
         record('forgot', email.lower(), ip)
 
         response = supabase.table('users').select("email").eq('email', email).execute()
         if response.data:
-            new_otp_session(email, forgot=True)
+            if not new_otp_session(email, forgot=True):
+                return render_template('forgot_password.html',
+                                       error="Verification email nahi bheji ja saki. Thori der baad dobara koshish karein.",
+                                       email=email)
         else:
             clear_otp_session()   # email na mile tab bhi same page dikhao (email ka pata na chale)
         return redirect(url_for('verify_otp'))
@@ -270,36 +303,48 @@ def signup():
         email = (request.form.get('email') or '').strip()
         ip = client_ip()
         if not EMAIL_RE.match(email):
-            return render_template('signup.html', error="Please enter a valid email address.")
+            return render_template('signup.html', error="Sahi email address likhein.")
         if blocked('signup', email.lower(), ip):
-            return render_template('signup.html', error="Too many requests! Please wait 15 minutes."), 429
+            return render_template('signup.html',
+                                   error="Bohat zyada requests ho gayin. 15 minute baad dobara try karein."), 429
         record('signup', email.lower(), ip)
 
         existing_user = supabase.table('users').select("email").eq('email', email).execute()
         if existing_user.data:
-            return render_template('signup.html', error="This email is already registered! Please sign in instead.")
+            return render_template('signup.html',
+                                   error="Yeh email pehle se registered hai. Sign In karein.")
 
-        new_otp_session(email, forgot=False)
+        if not new_otp_session(email, forgot=False):
+            return render_template('signup.html',
+                                   error="Verification email nahi bheji ja saki. Thori der baad dobara koshish karein.")
         return redirect(url_for('verify_otp'))
     return render_template('signup.html')
 
 
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
+    resend_url = otp_resend_url()
+
     if request.method == 'POST':
         email = session.get('signup_email')
         otp_hash = session.get('otp_hash')
         if not email or not otp_hash:
-            return "Invalid OTP! Please try again."
+            return render_template('verify_otp.html',
+                                   error="OTP galat hai ya session khatam ho gaya. Naya code mangwayein.",
+                                   seconds_left=0, resend_url=resend_url)
 
         ip = client_ip()
         if session.get('otp_tries', 0) >= 5 or blocked('otp', email.lower(), ip):
             clear_otp_session()
-            return "Too many wrong attempts! Please go back and request a new code.", 429
+            return render_template('verify_otp.html',
+                                   error="Bohat ghalat koshishen ho gayin. Naya code mangwayein.",
+                                   seconds_left=0, resend_url=resend_url), 429
 
-        if now_pkt().timestamp() - session.get('otp_time', 0) > 120:
+        if otp_seconds_left() <= 0:
             clear_otp_session()
-            return "OTP has expired! Please go back and resend a new code."
+            return render_template('verify_otp.html',
+                                   error="OTP expire ho gaya hai. Naya code mangwayein.",
+                                   seconds_left=0, resend_url=resend_url)
 
         entered = (request.form.get('otp') or '').strip()
         if hmac.compare_digest(make_otp_hash(email, entered), otp_hash):
@@ -309,8 +354,12 @@ def verify_otp():
 
         session['otp_tries'] = session.get('otp_tries', 0) + 1
         record('otp', email.lower(), ip)
-        return "Invalid OTP! Please try again."
-    return render_template('verify_otp.html')
+        return render_template('verify_otp.html',
+                               error="OTP galat hai. Dobara check karein.",
+                               seconds_left=otp_seconds_left(), resend_url=resend_url)
+
+    return render_template('verify_otp.html',
+                           seconds_left=otp_seconds_left(), resend_url=resend_url)
 
 
 @app.route('/set-password', methods=['GET', 'POST'])
@@ -323,9 +372,9 @@ def set_password():
         password = request.form.get('password') or ''
         confirm_password = request.form.get('confirm_password') or ''
         if password != confirm_password:
-            return "Passwords do not match! Please try again."
+            return render_template('set_password.html', error="Dono passwords match nahi karte. Dobara likhein.")
         if len(password) < 8:
-            return "Password must be at least 8 characters long."
+            return render_template('set_password.html', error="Password kam az kam 8 characters ka hona chahiye.")
 
         email = session.get('signup_email')
         is_forgot = session.get('is_forgot')
@@ -340,7 +389,8 @@ def set_password():
                 supabase.table('users').insert({'email': email, 'password': hashed}).execute()
         except Exception as e:
             print(f"Database Error: {e}")
-            return "Something went wrong! Please try again."
+            return render_template('set_password.html',
+                                   error="Password save nahi ho saka. Thori der baad dobara koshish karein.")
 
         profile_row = existing.data[0] if (existing is not None and existing.data) else None
 
@@ -363,12 +413,12 @@ def doctor_form():
     if not session.get('is_logged_in'):
         return redirect(url_for('login'))
     if request.method == 'POST':
-        doctor_name = request.form.get('doctor_name')
-        clinic_name = request.form.get('clinic_name')
-        clinic_phone = request.form.get('clinic_phone')
-        clinic_address = request.form.get('clinic_address') or ''
-        consultation_fee = request.form.get('fee')
-        specialization = request.form.get('specialization')
+        doctor_name = clip(request.form.get('doctor_name'), 100)
+        clinic_name = clip(request.form.get('clinic_name'), 100)
+        clinic_phone = clip(request.form.get('clinic_phone'), 50)
+        clinic_address = clip(request.form.get('clinic_address'), 200) or ''
+        consultation_fee = clip(request.form.get('fee'), 20)
+        specialization = clip(request.form.get('specialization'), 100)
 
         session['doctor_name'] = doctor_name
         session['clinic_name'] = clinic_name
@@ -395,11 +445,22 @@ def doctor_form():
             }).eq('email', email).execute()
 
         return redirect(url_for('dashboard'))
-    return render_template('doctor_form.html')
+
+    # Purani details form mein pehle se bhari hui dikhane ke liye
+    profile = {}
+    try:
+        res = supabase.table('users').select("*").eq('email', session.get('doctor_email')).execute()
+        if res.data:
+            profile = res.data[0]
+    except Exception as e:
+        print(f"Profile read error: {e}")
+    return render_template('doctor_form.html', profile=profile)
 
 
 # ------------------------------------------------------------------
 # Live token helpers
+#   - patients table mein sirf wohi tokens hain jin ki slip print confirm ho chuki hai
+#   - running token (queue_status) sirf doctor ke ESP32 button se aage barhta hai
 # ------------------------------------------------------------------
 def read_current_token(email):
     try:
@@ -409,6 +470,17 @@ def read_current_token(email):
     except Exception as e:
         print(f"read_current_token error: {e}")
     return 0
+
+
+def last_issued_token(email):
+    """Aaj tak jin tokens ki slip print confirm ho chuki hai, unmein sab se bara number."""
+    try:
+        res = supabase.table('patients').select("token").eq('doctor_email', email).eq('date', today_pkt()).execute()
+        nums = [int(r['token']) for r in (res.data or []) if str(r.get('token', '')).isdigit()]
+        return max(nums, default=0)
+    except Exception as e:
+        print(f"last_issued_token error: {e}")
+        return 0
 
 
 def doctor_from_device(mac, key):
@@ -421,15 +493,23 @@ def doctor_from_device(mac, key):
     return None
 
 
+def clean_doctor_name(name):
+    return re.sub(r'^\s*dr\.?\s*', '', name or '', flags=re.I).strip() or 'Doctor'
+
+
+def render_dashboard(error=None):
+    return render_template('dashboard.html',
+                           clinic_name=session.get('clinic_name', 'CliqSlip Clinic'),
+                           doctor_name=clean_doctor_name(session.get('doctor_name')),
+                           current_token=read_current_token(session.get('doctor_email')),
+                           error=error)
+
+
 @app.route('/dashboard')
 def dashboard():
     if not session.get('is_logged_in'):
         return redirect(url_for('login'))
-    clinic_name = session.get('clinic_name', 'CliqSlip Clinic')
-    doctor_name = session.get('doctor_name', 'Doctor')
-    current_token = read_current_token(session.get('doctor_email'))
-    return render_template('dashboard.html', clinic_name=clinic_name,
-                           doctor_name=doctor_name, current_token=current_token)
+    return render_dashboard()
 
 
 @app.route('/bluetooth')
@@ -441,21 +521,32 @@ def bluetooth():
     return render_template('bluetooth.html', clinic_name=clinic_name, doctor_name=doctor_name)
 
 
+# Button wala ESP32 yeh route call karega (POST JSON: mac, key).
+# Running token sirf utna hi barhega jitne tokens ki slip print confirm ho chuki hai.
 @app.route('/api/next-token', methods=['POST'])
 def api_next_token():
     data = request.get_json(silent=True) or {}
     email = doctor_from_device(data.get('mac'), data.get('key'))
     if not email:
         return {'ok': False, 'error': 'unauthorized'}, 401
-    new_token = read_current_token(email) + 1
+
+    current = read_current_token(email)
+    issued = last_issued_token(email)
+
+    if current >= issued:
+        # Koi agla (print ho chuka) patient nahi hai
+        return {'ok': True, 'current_token': current, 'issued': issued, 'moved': False}
+
+    new_token = current + 1
     supabase.table('queue_status').upsert({
         'doctor_email': email,
         'current_token': new_token,
         'date': today_pkt()
     }).execute()
-    return {'ok': True, 'current_token': new_token}
+    return {'ok': True, 'current_token': new_token, 'issued': issued, 'moved': True}
 
 
+# LCD wala ESP32 (?mac=...&key=...) aur website dashboard (login session) dono yeh call karte hain
 @app.route('/api/current-token')
 def api_current_token():
     email = doctor_from_device(request.args.get('mac'), request.args.get('key'))
@@ -463,25 +554,14 @@ def api_current_token():
         email = session.get('doctor_email')
     if not email:
         return {'ok': False}, 401
-    return {'ok': True, 'current_token': read_current_token(email)}
-
-
-@app.route('/manual-next-token', methods=['POST'])
-def manual_next_token():
-    if not session.get('is_logged_in'):
-        return {'ok': False}, 401
-    email = session.get('doctor_email')
-    new_token = read_current_token(email) + 1
-    supabase.table('queue_status').upsert({
-        'doctor_email': email,
-        'current_token': new_token,
-        'date': today_pkt()
-    }).execute()
-    return {'ok': True, 'current_token': new_token}
+    return {'ok': True, 'current_token': read_current_token(email), 'issued': last_issued_token(email)}
 
 
 # ------------------------------------------------------------------
-# Slip generate + print (Safe DB Insert & Live Queue Sync)
+# Slip generate -> print -> CONFIRM
+#   generate-slip: sirf slip banata hai (database mein kuch save nahi hota)
+#   confirm-print: slip nikalne ke baad dabane par hi record + token count hota hai
+#   cancel-print : print nahi hui to slip cancel (token number wapas khali)
 # ------------------------------------------------------------------
 @app.route('/generate-slip', methods=['POST'])
 def generate_slip():
@@ -493,15 +573,15 @@ def generate_slip():
     current_time = now.strftime("%I:%M %p")
     email = session.get('doctor_email')
 
-    token_number = 1
     try:
         res = supabase.table('patients').select("token").eq('doctor_email', email).eq('date', current_date).execute()
         nums = [int(r['token']) for r in (res.data or []) if str(r.get('token', '')).isdigit()]
         token_number = max(nums, default=0) + 1
     except Exception as e:
         print(f"Token read error: {e}")
+        return render_dashboard(error="Token nahi ban saka. Internet check karke dobara koshish karein.")
 
-    slip_data = {
+    session['latest_slip'] = {
         'token_number': token_number,
         'date': current_date,
         'time': current_time,
@@ -513,49 +593,70 @@ def generate_slip():
         'heart_rate': clip(request.form.get('heart_rate'), 50),
         'sugar': clip(request.form.get('sugar'), 50),
         'notes': clip(request.form.get('notes'), 1000),
-        'saved': True
+        'confirmed': False
     }
-
-    try:
-        insert_data = {
-            'doctor_email': email,
-            'token': str(token_number),
-            'date': current_date,
-            'patient_name': slip_data.get('patient_name'),
-            'phone': slip_data.get('patient_phone'),
-            'bp': slip_data.get('blood_pressure'),
-            'sugar': slip_data.get('sugar'),
-            'time': current_time,
-            'patient_age': slip_data.get('patient_age'),
-            'gender': slip_data.get('gender'),
-            'heart_rate': slip_data.get('heart_rate'),
-            'notes': slip_data.get('notes')
-        }
-
-        supabase.table('patients').insert(insert_data).execute()
-
-        supabase.table('queue_status').upsert({
-            'doctor_email': email,
-            'current_token': token_number,
-            'date': current_date
-        }).execute()
-
-    except Exception as e:
-        print(f"Patient save error: {e}")
-        slip_data['saved'] = False
-
-    session['latest_slip'] = slip_data
     return redirect(url_for('print_slip'))
 
 
-def clean_doctor_name(name):
-    return re.sub(r'^\s*dr\.?\s*', '', name or '', flags=re.I).strip() or 'Doctor'
+@app.route('/confirm-print', methods=['POST'])
+def confirm_print():
+    if not session.get('is_logged_in'):
+        return redirect(url_for('login'))
+    slip = session.get('latest_slip')
+    if not slip or slip.get('confirmed'):
+        return redirect(url_for('dashboard'))
+
+    email = session.get('doctor_email')
+    try:
+        # Kisi aur ne yehi token number pehle to save nahi kar liya?
+        exists = (supabase.table('patients').select("token")
+                  .eq('doctor_email', email).eq('date', slip['date'])
+                  .eq('token', str(slip['token_number'])).execute())
+        if exists.data:
+            session['print_error'] = "Yeh token number kisi aur patient ko mil chuka hai. Slip cancel karke dobara banayein."
+            return redirect(url_for('print_slip'))
+
+        supabase.table('patients').insert({
+            'doctor_email': email,
+            'token': str(slip['token_number']),
+            'date': slip['date'],
+            'time': slip['time'],
+            'patient_name': slip.get('patient_name'),
+            'patient_age': slip.get('patient_age'),
+            'gender': slip.get('gender'),
+            'phone': slip.get('patient_phone'),
+            'bp': slip.get('blood_pressure'),
+            'heart_rate': slip.get('heart_rate'),
+            'sugar': slip.get('sugar'),
+            'notes': slip.get('notes')
+        }).execute()
+    except Exception as e:
+        print(f"Patient save error: {e}")
+        session['print_error'] = "Record save nahi ho saka (internet check karein). Dobara Confirm dabayein."
+        return redirect(url_for('print_slip'))
+
+    slip['confirmed'] = True
+    session['latest_slip'] = slip
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/cancel-print', methods=['POST'])
+def cancel_print():
+    if not session.get('is_logged_in'):
+        return redirect(url_for('login'))
+    slip = session.get('latest_slip')
+    if slip and not slip.get('confirmed'):
+        session.pop('latest_slip', None)
+    session.pop('print_error', None)
+    return redirect(url_for('dashboard'))
 
 
 def build_escpos(slip, clinic_name, doctor_name, clinic_phone, specialization, fee):
-    W = 32
+    """58mm thermal printer ke liye asli ESC/POS bytes (RawBT inhein seedha print karta hai)."""
+    W = 32  # 58mm printer par aam taur par 32 characters per line
 
     def enc(s):
+        # Urdu/special characters thermal printer par garbage na bane, is liye '?' ban jayenge
         return str(s).encode('ascii', 'replace')
 
     def line(s=''):
@@ -569,7 +670,7 @@ def build_escpos(slip, clinic_name, doctor_name, clinic_phone, specialization, f
     BIG_ON, BIG_OFF = b'\x1d\x21\x11', b'\x1d\x21\x00'
     CENTER, LEFT = b'\x1b\x61\x01', b'\x1b\x61\x00'
 
-    out = b'\x1b\x40'
+    out = b'\x1b\x40'  # printer reset
     out += CENTER
     out += BOLD_ON + BIG_ON + line(f"TOKEN {slip['token_number']}") + BIG_OFF + BOLD_OFF
     out += sep
@@ -622,7 +723,8 @@ def print_slip():
                            clinic_phone=clinic_phone,
                            consultation_fee=consultation_fee,
                            specialization=specialization,
-                           rawbt_data=rawbt_data)
+                           rawbt_data=rawbt_data,
+                           error=session.pop('print_error', None))
 
 
 # ------------------------------------------------------------------
