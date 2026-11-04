@@ -34,7 +34,8 @@
         .slip h2 { margin: 4px 0; font-size: 20px; }
         .slip h3 { margin: 4px 0; font-size: 15px; }
 
-        .actions { max-width: 320px; margin: 14px auto 0 auto; }
+        .actions { max-width: 320px; margin: 14px auto 0 auto; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        .actions form { margin: 0; }
         .btn {
             display: block;
             width: 100%;
@@ -48,22 +49,47 @@
             text-decoration: none;
             color: #fff;
             cursor: pointer;
-            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: inherit;
         }
         .btn-green { background: #16a34a; }
         .btn-blue { background: #2563eb; }
         .btn-gray { background: #475569; }
+        .btn-red { background: #dc2626; }
+
+        .hint {
+            margin: 18px 0 0 0;
+            padding: 10px 12px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .done {
+            margin: 18px 0 0 0;
+            padding: 12px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
 
         .warn {
             max-width: 320px;
-            margin: 10px auto 0 auto;
+            margin: 0 auto 10px auto;
             background: #fef2f2;
             color: #991b1b;
             border: 1px solid #fecaca;
-            padding: 10px;
+            padding: 10px 12px;
             border-radius: 8px;
             font-size: 13px;
+            line-height: 1.5;
             font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 600;
         }
 
         /* PC se print karte waqt sirf slip nikle, buttons nahi */
@@ -76,10 +102,8 @@
 </head>
 <body>
 
-    {% if not slip.saved %}
-    <div class="warn">
-        ⚠️ Slip print ho sakti hai, magar patient ka record database mein save nahi hua. Supabase ke columns check karein.
-    </div>
+    {% if error %}
+    <div class="warn">⚠️ {{ error }}</div>
     {% endif %}
 
     <div class="slip" id="visual-slip">
@@ -111,13 +135,31 @@
     </div>
 
     <div class="actions">
-        <!-- Mobile: RawBT ko poora print data seedha server se mil raha hai (JavaScript ki zaroorat nahi) -->
+        <!-- Mobile: RawBT ko poora print data seedha server se mil raha hai -->
         <a class="btn btn-green" href="rawbt:base64,{{ rawbt_data }}">🖨️ Print via RawBT (Mobile)</a>
 
         <!-- PC / Laptop -->
-        <button class="btn btn-blue" onclick="window.print()">💻 Print via PC (Browser)</button>
+        <button type="button" class="btn btn-blue" onclick="window.print()">💻 Print via PC (Browser)</button>
 
-        <a class="btn btn-gray" href="/dashboard">➕ Next Patient / Dashboard</a>
+        {% if slip.confirmed %}
+            <div class="done">✅ Token {{ slip.token_number }} ka record save ho chuka hai</div>
+            <a class="btn btn-gray" href="/dashboard">➕ Next Patient / Dashboard</a>
+        {% else %}
+            <div class="hint">
+                Pehle slip print karein. Jab <b>slip nikal aaye</b> tab neeche Confirm dabayein.
+                Confirm se pehle token record mein save nahi hota aur live token par nahi aata.
+            </div>
+
+            <!-- Slip nikal aayi: ab record save hoga -->
+            <form action="/confirm-print" method="POST">
+                <button type="submit" class="btn btn-green">✅ Slip nikal gayi, Confirm karein</button>
+            </form>
+
+            <!-- Print nahi hui: slip cancel -->
+            <form action="/cancel-print" method="POST" onsubmit="return confirm('Slip cancel karein? Is token ka record save nahi hoga.');">
+                <button type="submit" class="btn btn-red">❌ Print nahi hui, Cancel karein</button>
+            </form>
+        {% endif %}
     </div>
 
 </body>
