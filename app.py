@@ -17,8 +17,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 
 # SECRET_KEY Vercel ke Environment Variables me zaroor set karein (lamba random).
-# Agar set na ho to SUPABASE_KEY se ek stable key banti hai, taaki Vercel ke alag alag
-# instances par OTP/login session na toote (random key har instance par alag hoti hai).
 _secret = os.environ.get("SECRET_KEY")
 if not _secret:
     print("WARNING: SECRET_KEY set nahi hai! Vercel me set karein.")
@@ -55,7 +53,6 @@ EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 @app.before_request
 def security_checks():
     session.permanent = True
-    # Dusri website se aayi POST request block (CSRF se bachav)
     if request.method == 'POST':
         origin = request.headers.get('Origin')
         if origin and urlparse(origin).netloc != request.host:
@@ -82,16 +79,15 @@ def today_pkt():
 
 
 def clip(value, n=200):
-    """User input ko lambai tak kaat do."""
     if value is None:
         return None
     return str(value).strip()[:n]
 
 
 # ------------------------------------------------------------------
-# Rate limit (Supabase ke login_attempts table se; Vercel par bhi chalta hai)
+# Rate limit
 # ------------------------------------------------------------------
-LIMITS = {            # action: (kitni koshish, kitne second me)
+LIMITS = {
     'login':  (5, 600),
     'forgot': (3, 900),
     'signup': (3, 900),
@@ -126,7 +122,7 @@ def record(action, *idents):
         rows = [{'bucket': f"{action}:{i}"} for i in idents if i]
         if rows:
             supabase.table('login_attempts').insert(rows).execute()
-        if secrets.randbelow(50) == 0:   # kabhi kabhi purani entries saaf
+        if secrets.randbelow(50) == 0:
             old = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
             supabase.table('login_attempts').delete().lt('created_at', old).execute()
     except Exception as e:
@@ -141,7 +137,6 @@ def verify_password(user_row, password):
     password = password or ''
     if stored.startswith(('scrypt:', 'pbkdf2:')):
         return check_password_hash(stored, password)
-    # Purana plain-text password: match hua to turant hash karke save kar do
     if hmac.compare_digest(stored.encode(), password.encode()):
         try:
             supabase.table('users').update(
@@ -154,7 +149,6 @@ def verify_password(user_row, password):
 
 
 def make_otp_hash(email, otp):
-    # OTP session cookie me seedha nahi rakhte (cookie padhi ja sakti hai), uska hash rakhte hain
     msg = f"{email}:{otp}".encode()
     return hmac.new(app.secret_key.encode(), msg, hashlib.sha256).hexdigest()
 
@@ -165,7 +159,6 @@ def clear_otp_session():
 
 
 def new_otp_session(email, forgot):
-    """OTP banao aur email karo. Email chali gayi to True, warna False."""
     otp = secrets.randbelow(900000) + 100000
     clear_otp_session()
     session['signup_email'] = email
@@ -182,7 +175,6 @@ def new_otp_session(email, forgot):
 
 
 def otp_seconds_left():
-    """OTP expire hone mein kitne second baqi hain (2 minute ki limit)."""
     return max(0, int(120 - (now_pkt().timestamp() - session.get('otp_time', 0))))
 
 
@@ -191,7 +183,7 @@ def otp_resend_url():
 
 
 # ------------------------------------------------------------------
-# Email OTP
+# Email OTP (Updated to Port 465 SMTP_SSL for Vercel reliability)
 # ------------------------------------------------------------------
 def send_email_otp(receiver_email, otp):
     sender_email = os.environ.get("GMAIL_USER", "clipslip.official@gmail.com")
@@ -215,8 +207,8 @@ def send_email_otp(receiver_email, otp):
     message.attach(MIMEText(html, "html"))
 
     try:
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
-        server.starttls()
+        # Port 465 aur SMTP_SSL Vercel serverless par sab se best aur reliable hai
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15)
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, receiver_email, message.as_string())
         server.quit()
@@ -292,7 +284,7 @@ def forgot_password():
                                        error="Verification email nahi bheji ja saki. Thori der baad dobara koshish karein.",
                                        email=email)
         else:
-            clear_otp_session()   # email na mile tab bhi same page dikhao (email ka pata na chale)
+            clear_otp_session()
         return redirect(url_for('verify_otp'))
     return render_template('forgot_password.html')
 
@@ -364,7 +356,6 @@ def verify_otp():
 
 @app.route('/set-password', methods=['GET', 'POST'])
 def set_password():
-    # OTP verify kiye bina is page par aana mana hai
     if not session.get('otp_verified') or not session.get('signup_email'):
         return redirect(url_for('login'))
 
@@ -446,7 +437,6 @@ def doctor_form():
 
         return redirect(url_for('dashboard'))
 
-    # Purani details form mein pehle se bhari hui dikhane ke liye
     profile = {}
     try:
         res = supabase.table('users').select("*").eq('email', session.get('doctor_email')).execute()
@@ -457,11 +447,6 @@ def doctor_form():
     return render_template('doctor_form.html', profile=profile)
 
 
-# ------------------------------------------------------------------
-# Live token helpers
-#   - patients table mein sirf wohi tokens hain jin ki slip print confirm ho chuki hai
-#   - running token (queue_status) sirf doctor ke ESP32 button se aage barhta hai
-# ------------------------------------------------------------------
 def read_current_token(email):
     try:
         res = supabase.table('queue_status').select("*").eq('doctor_email', email).execute()
@@ -473,7 +458,6 @@ def read_current_token(email):
 
 
 def last_issued_token(email):
-    """Aaj tak jin tokens ki slip print confirm ho chuki hai, unmein sab se bara number."""
     try:
         res = supabase.table('patients').select("token").eq('doctor_email', email).eq('date', today_pkt()).execute()
         nums = [int(r['token']) for r in (res.data or []) if str(r.get('token', '')).isdigit()]
@@ -521,8 +505,6 @@ def bluetooth():
     return render_template('bluetooth.html', clinic_name=clinic_name, doctor_name=doctor_name)
 
 
-# Button wala ESP32 yeh route call karega (POST JSON: mac, key).
-# Running token sirf utna hi barhega jitne tokens ki slip print confirm ho chuki hai.
 @app.route('/api/next-token', methods=['POST'])
 def api_next_token():
     data = request.get_json(silent=True) or {}
@@ -534,7 +516,6 @@ def api_next_token():
     issued = last_issued_token(email)
 
     if current >= issued:
-        # Koi agla (print ho chuka) patient nahi hai
         return {'ok': True, 'current_token': current, 'issued': issued, 'moved': False}
 
     new_token = current + 1
@@ -546,7 +527,6 @@ def api_next_token():
     return {'ok': True, 'current_token': new_token, 'issued': issued, 'moved': True}
 
 
-# LCD wala ESP32 (?mac=...&key=...) aur website dashboard (login session) dono yeh call karte hain
 @app.route('/api/current-token')
 def api_current_token():
     email = doctor_from_device(request.args.get('mac'), request.args.get('key'))
@@ -557,12 +537,6 @@ def api_current_token():
     return {'ok': True, 'current_token': read_current_token(email), 'issued': last_issued_token(email)}
 
 
-# ------------------------------------------------------------------
-# Slip generate -> print -> CONFIRM
-#   generate-slip: sirf slip banata hai (database mein kuch save nahi hota)
-#   confirm-print: slip nikalne ke baad dabane par hi record + token count hota hai
-#   cancel-print : print nahi hui to slip cancel (token number wapas khali)
-# ------------------------------------------------------------------
 @app.route('/generate-slip', methods=['POST'])
 def generate_slip():
     if not session.get('is_logged_in'):
@@ -608,7 +582,6 @@ def confirm_print():
 
     email = session.get('doctor_email')
     try:
-        # Kisi aur ne yehi token number pehle to save nahi kar liya?
         exists = (supabase.table('patients').select("token")
                   .eq('doctor_email', email).eq('date', slip['date'])
                   .eq('token', str(slip['token_number'])).execute())
@@ -652,11 +625,9 @@ def cancel_print():
 
 
 def build_escpos(slip, clinic_name, doctor_name, clinic_phone, specialization, fee):
-    """58mm thermal printer ke liye asli ESC/POS bytes (RawBT inhein seedha print karta hai)."""
-    W = 32  # 58mm printer par aam taur par 32 characters per line
+    W = 32
 
     def enc(s):
-        # Urdu/special characters thermal printer par garbage na bane, is liye '?' ban jayenge
         return str(s).encode('ascii', 'replace')
 
     def line(s=''):
@@ -670,7 +641,7 @@ def build_escpos(slip, clinic_name, doctor_name, clinic_phone, specialization, f
     BIG_ON, BIG_OFF = b'\x1d\x21\x11', b'\x1d\x21\x00'
     CENTER, LEFT = b'\x1b\x61\x01', b'\x1b\x61\x00'
 
-    out = b'\x1b\x40'  # printer reset
+    out = b'\x1b\x40'
     out += CENTER
     out += BOLD_ON + BIG_ON + line(f"TOKEN {slip['token_number']}") + BIG_OFF + BOLD_OFF
     out += sep
@@ -727,9 +698,6 @@ def print_slip():
                            error=session.pop('print_error', None))
 
 
-# ------------------------------------------------------------------
-# Database pages
-# ------------------------------------------------------------------
 @app.route('/database')
 def database():
     if not session.get('is_logged_in'):
@@ -855,9 +823,6 @@ def database_date_detail(date_str):
                            clinic_name=clinic_name)
 
 
-# ------------------------------------------------------------------
-# Settings / ESP32 MAC
-# ------------------------------------------------------------------
 @app.route('/save-mac', methods=['POST'])
 def save_mac():
     if not session.get('is_logged_in'):
