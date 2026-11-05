@@ -128,7 +128,7 @@ def record(action, *idents):
 
 
 # ------------------------------------------------------------------
-# Password + OTP helpers
+# Password + OTP helpers (Supabase Native Auth REST API)
 # ------------------------------------------------------------------
 def verify_password(user_row, password):
     stored = user_row.get('password') or ''
@@ -192,9 +192,6 @@ def otp_resend_url():
     return url_for('forgot_password') if session.get('is_forgot') else url_for('signup')
 
 
-# ------------------------------------------------------------------
-# Profile helpers
-# ------------------------------------------------------------------
 def load_profile_into_session(user_row):
     session['doctor_name'] = user_row.get('doctor_name') or 'Doctor'
     session['clinic_name'] = user_row.get('clinic_name') or 'CliqSlip Clinic'
