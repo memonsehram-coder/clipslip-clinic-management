@@ -8,6 +8,7 @@ import secrets
 import base64
 import re
 import os
+import requests
 from supabase import create_client, Client
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -160,11 +161,25 @@ def new_otp_session(email, forgot):
         session['is_forgot'] = True
     
     try:
-        # Supabase Auth built-in OTP sender (works without custom domain)
-        supabase.auth.sign_in_with_otp({"email": email})
-        return True
+        # Direct Supabase Auth OTP REST API call (100% reliable on Vercel)
+        url = f"{SUPABASE_URL}/auth/v1/otp"
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "email": email,
+            "create_user": True
+        }
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        if response.status_code in [200, 201]:
+            return True
+        else:
+            print(f"Supabase Auth OTP API error: {response.text}")
+            return False
     except Exception as e:
-        print(f"Supabase OTP email sending failed: {e}")
+        print(f"Supabase OTP email sending failed error: {e}")
         clear_otp_session()
         return False
 
@@ -302,10 +317,24 @@ def verify_otp():
         entered = (request.form.get('otp') or '').strip()
         
         try:
-            res = supabase.auth.verify_otp({"email": email, "token": entered, "type": "email"})
-            if res:
+            # Direct Supabase Auth Verify OTP REST API call
+            verify_url = f"{SUPABASE_URL}/auth/v1/verify"
+            headers = {
+                "apikey": SUPABASE_KEY,
+                "Authorization": f"Bearer {SUPABASE_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "email": email,
+                "token": entered,
+                "type": "email"
+            }
+            res = requests.post(verify_url, json=payload, headers=headers, timeout=15)
+            if res.status_code in [200, 201]:
                 session['otp_verified'] = True
                 return redirect(url_for('set_password'))
+            else:
+                print(f"Verify OTP API error: {res.text}")
         except Exception as e:
             print(f"OTP Verification error: {e}")
 
