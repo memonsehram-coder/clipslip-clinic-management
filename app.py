@@ -8,7 +8,6 @@ import secrets
 import base64
 import re
 import os
-import requests
 from supabase import create_client, Client
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -146,30 +145,28 @@ def verify_password(user_row, password):
     return False
 
 
-def make_otp_hash(email, otp):
-    msg = f"{email}:{otp}".encode()
-    return hmac.new(app.secret_key.encode(), msg, hashlib.sha256).hexdigest()
-
-
 def clear_otp_session():
-    for k in ('otp_hash', 'otp_time', 'otp_tries', 'otp_verified', 'is_forgot', 'signup_email'):
+    for k in ('otp_time', 'otp_tries', 'otp_verified', 'is_forgot', 'signup_email'):
         session.pop(k, None)
 
 
 def new_otp_session(email, forgot):
-    otp = secrets.randbelow(900000) + 100000
     clear_otp_session()
     session['signup_email'] = email
-    session['otp_hash'] = make_otp_hash(email, otp)
     session['otp_time'] = now_pkt().timestamp()
     session['otp_tries'] = 0
     session['otp_verified'] = False
     if forgot:
         session['is_forgot'] = True
-    sent = send_email_otp(email, otp)
-    if not sent:
+    
+    try:
+        # Supabase Auth built-in OTP sender (works without custom domain)
+        supabase.auth.sign_in_with_otp({"email": email})
+        return True
+    except Exception as e:
+        print(f"Supabase OTP email sending failed: {e}")
         clear_otp_session()
-    return sent
+        return False
 
 
 def otp_seconds_left():
@@ -181,47 +178,8 @@ def otp_resend_url():
 
 
 # ------------------------------------------------------------------
-# Email OTP (Resend HTTP API - 100% Reliable on Vercel)
+# Profile helpers
 # ------------------------------------------------------------------
-def send_email_otp(receiver_email, otp):
-    api_key = os.environ.get("RESEND_API_KEY", "")
-    if not api_key:
-        print("Email sending failed: RESEND_API_KEY Vercel me set nahi hai.")
-        return False
-
-    url = "https://api.resend.com/emails"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    
-    # Resend free tier ke liye onboarding@resend.dev use hota hai jab tak custom domain na ho
-    payload = {
-        "from": "CliqSlip <onboarding@resend.dev>",
-        "to": [receiver_email],
-        "subject": "CliqSlip - Verification Code",
-        "html": f"""
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h3>CliqSlip Clinic Management</h3>
-            <p>Aapka tasdeeqi code (OTP) yeh hai:</p>
-            <h2 style="color: #2563eb; font-size: 32px; letter-spacing: 2px;">{otp}</h2>
-            <p>Yeh code sirf 2 minute ke liye karamad hai. Isay kisi ke sath share na karein.</p>
-        </div>
-        """
-    }
-
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=15)
-        if response.status_code in [200, 201]:
-            return True
-        else:
-            print(f"Resend API error response: {response.text}")
-            return False
-    except Exception as e:
-        print(f"Email sending failed error: {e}")
-        return False
-
-
 def load_profile_into_session(user_row):
     session['doctor_name'] = user_row.get('doctor_name') or 'Doctor'
     session['clinic_name'] = user_row.get('clinic_name') or 'CliqSlip Clinic'
@@ -323,8 +281,7 @@ def verify_otp():
 
     if request.method == 'POST':
         email = session.get('signup_email')
-        otp_hash = session.get('otp_hash')
-        if not email or not otp_hash:
+        if not email:
             return render_template('verify_otp.html',
                                    error="OTP galat hai ya session khatam ho gaya. Naya code mangwayein.",
                                    seconds_left=0, resend_url=resend_url)
@@ -343,10 +300,14 @@ def verify_otp():
                                    seconds_left=0, resend_url=resend_url)
 
         entered = (request.form.get('otp') or '').strip()
-        if hmac.compare_digest(make_otp_hash(email, entered), otp_hash):
-            session['otp_verified'] = True
-            session.pop('otp_hash', None)
-            return redirect(url_for('set_password'))
+        
+        try:
+            res = supabase.auth.verify_otp({"email": email, "token": entered, "type": "email"})
+            if res:
+                session['otp_verified'] = True
+                return redirect(url_for('set_password'))
+        except Exception as e:
+            print(f"OTP Verification error: {e}")
 
         session['otp_tries'] = session.get('otp_tries', 0) + 1
         record('otp', email.lower(), ip)
