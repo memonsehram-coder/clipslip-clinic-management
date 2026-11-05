@@ -4,18 +4,17 @@ from urllib.parse import urlparse
 import calendar
 import hashlib
 import hmac
-import smtplib
 import secrets
 import base64
 import re
 import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from supabase import create_client, Client
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
+# SECRET_KEY Vercel ke Environment Variables me zaroor set karein
 _secret = os.environ.get("SECRET_KEY")
 if not _secret:
     _base = os.environ.get("SUPABASE_KEY", "")
@@ -25,12 +24,15 @@ if not _secret:
         _secret = secrets.token_hex(32)
 app.secret_key = _secret
 
+# Supabase Configuration
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ihcghpiezdvnomfxvetu.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# Session ko 1 saal tak permanent rakhne ke liye
 app.permanent_session_lifetime = timedelta(days=365)
 
+# Cookie security
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
@@ -134,30 +136,41 @@ def verify_password(user_row, password):
     return False
 
 
-def make_otp_hash(email, otp):
-    msg = f"{email}:{otp}".encode()
-    return hmac.new(app.secret_key.encode(), msg, hashlib.sha256).hexdigest()
-
-
 def clear_otp_session():
-    for k in ('otp_hash', 'otp_time', 'otp_tries', 'otp_verified', 'is_forgot', 'signup_email'):
+    for k in ('otp_time', 'otp_tries', 'otp_verified', 'is_forgot', 'signup_email'):
         session.pop(k, None)
 
 
 def new_otp_session(email, forgot):
-    otp = secrets.randbelow(900000) + 100000
     clear_otp_session()
     session['signup_email'] = email
-    session['otp_hash'] = make_otp_hash(email, otp)
     session['otp_time'] = now_pkt().timestamp()
     session['otp_tries'] = 0
     session['otp_verified'] = False
     if forgot:
         session['is_forgot'] = True
-    sent = send_email_otp(email, otp)
-    if not sent:
+    
+    try:
+        url = f"{SUPABASE_URL}/auth/v1/otp"
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "email": email,
+            "create_user": True
+        }
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        if response.status_code in [200, 201]:
+            return True
+        else:
+            print(f"Supabase Auth OTP API error: {response.text}")
+            return False
+    except Exception as e:
+        print(f"Supabase OTP email sending failed error: {e}")
         clear_otp_session()
-    return sent
+        return False
 
 
 def otp_seconds_left():
@@ -166,42 +179,6 @@ def otp_seconds_left():
 
 def otp_resend_url():
     return url_for('forgot_password') if session.get('is_forgot') else url_for('signup')
-
-
-# Direct Python Email Sender via Gmail SMTP
-def send_email_otp(receiver_email, otp):
-    sender_email = os.environ.get("GMAIL_USER", "clipslip.official@gmail.com")
-    sender_password = (os.environ.get("GMAIL_APP_PASSWORD", "") or "").replace(" ", "")
-
-    if not sender_password:
-        print("Email sending failed: GMAIL_APP_PASSWORD Vercel me set nahi hai.")
-        return False
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = "CliqSlip - Verification Code"
-    message["From"] = sender_email
-    message["To"] = receiver_email
-
-    html = f"""
-    <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <h3 style="color: #2563eb;">CliqSlip Clinic Management</h3>
-        <p>Aapka tasdeeqi code (OTP) yeh hai:</p>
-        <h2 style="background: #f3f4f6; padding: 10px; display: inline-block; letter-spacing: 2px;">{otp}</h2>
-        <p>Yeh code sirf 2 minute ke liye karamad hai. Isay kisi ke sath share na karein.</p>
-    </div>
-    """
-    message.attach(MIMEText(html, "html"))
-
-    try:
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
-        server.quit()
-        return True
-    except Exception as e:
-        print(f"Email sending failed error: {e}")
-        return False
 
 
 def load_profile_into_session(user_row):
@@ -302,8 +279,7 @@ def verify_otp():
 
     if request.method == 'POST':
         email = session.get('signup_email')
-        otp_hash = session.get('otp_hash')
-        if not email or not otp_hash:
+        if not email:
             return render_template('verify_otp.html',
                                    error="OTP galat hai ya session khatam ho gaya. Naya code mangwayein.",
                                    seconds_left=0, resend_url=resend_url)
@@ -322,10 +298,27 @@ def verify_otp():
                                    seconds_left=0, resend_url=resend_url)
 
         entered = (request.form.get('otp') or '').strip()
-        if hmac.compare_digest(make_otp_hash(email, entered), otp_hash):
-            session['otp_verified'] = True
-            session.pop('otp_hash', None)
-            return redirect(url_for('set_password'))
+        
+        try:
+            verify_url = f"{SUPABASE_URL}/auth/v1/verify"
+            headers = {
+                "apikey": SUPABASE_KEY,
+                "Authorization": f"Bearer {SUPABASE_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "email": email,
+                "token": entered,
+                "type": "email"
+            }
+            res = requests.post(verify_url, json=payload, headers=headers, timeout=15)
+            if res.status_code in [200, 201]:
+                session['otp_verified'] = True
+                return redirect(url_for('set_password'))
+            else:
+                print(f"Verify OTP API error: {res.text}")
+        except Exception as e:
+            print(f"OTP Verification error: {e}")
 
         session['otp_tries'] = session.get('otp_tries', 0) + 1
         record('otp', email.lower(), ip)
@@ -763,7 +756,7 @@ def database_month_detail(month_year):
         dt = datetime(year, month_num, day)
         date_str = dt.strftime("%Y-%m-%d")
         display_date = dt.strftime("%d %b %Y")
-        day_records = [r for r in PATIENT_RECORDS if r.get('date'] == date_str or str(r.get('date', '')).startswith(date_str)]
+        day_records = [r for r in PATIENT_RECORDS if r.get('date') == date_str or str(r.get('date', '')).startswith(date_str)]
 
         dates_list.append({
             'date_str': date_str,
